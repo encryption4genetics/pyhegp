@@ -1,0 +1,25 @@
+[build-system]
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pyhegp"
+version = "0.1.0"
+authors = [
+  { name="Arun Isaac", email="arunisaac@systemreboot.net" }
+]
+description = "Homomorphic encryption of genotypes and phenotypes"
+readme = "README.md"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent"
+]
+license = {file = "COPYING"}
+dependencies = [
+  "click",
+  "numpy",
+  "scipy"
+]
+
+[project.scripts]
+pyhegp = "pyhegp:main"
