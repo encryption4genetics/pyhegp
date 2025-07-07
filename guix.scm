@@ -16,7 +16,7 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
-(use-modules ((gnu packages check) #:select (python-pytest))
+(use-modules ((gnu packages check) #:select (python-hypothesis python-pytest))
              ((gnu packages python-build) #:select (python-flit-core))
              ((gnu packages python-science) #:select (python-scipy))
              ((gnu packages python-xyz) #:select (python-click python-numpy))
@@ -36,10 +36,9 @@
                         #:recursive? #t
                         #:select? (git-predicate (current-source-directory))))
     (build-system pyproject-build-system)
-    (arguments
-     (list #:tests? #f))
     (native-inputs
      (list python-flit-core
+           python-hypothesis
            python-pytest))
     (propagated-inputs
      (list python-click
