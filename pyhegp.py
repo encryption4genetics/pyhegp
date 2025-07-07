@@ -38,8 +38,6 @@ def hegp_decrypt(ciphertext, key):
 
 def read_genotype(genotype_file):
     return np.loadtxt(genotype_file, delimiter=",")
-    # snps = genotype_file.readline().split(",")
-    # return np.loadtxt(genotype_file, delimiter=",", skiprows=1, usecols=range(1, 1+len(snps)))
 
 @click.group()
 def main():
