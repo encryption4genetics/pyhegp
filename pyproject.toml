@@ -22,4 +22,4 @@ dependencies = [
 ]
 
 [project.scripts]
-pyhegp = "pyhegp:main"
+pyhegp = "pyhegp.pyhegp:main"

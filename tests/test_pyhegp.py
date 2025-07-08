@@ -21,7 +21,7 @@ from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 from pytest import approx
 
-from pyhegp import hegp_encrypt, hegp_decrypt, random_key
+from pyhegp.pyhegp import hegp_encrypt, hegp_decrypt, random_key
 
 @given(st.one_of(
     arrays("int32",
