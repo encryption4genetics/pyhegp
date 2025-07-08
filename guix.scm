@@ -1,1 +1,1 @@
-.guix/pyhegp-project.scm
+.guix/pyhegp-package.scm
