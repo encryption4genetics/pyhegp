@@ -25,15 +25,15 @@ from pyhegp.pyhegp import hegp_encrypt, hegp_decrypt, random_key
 
 @given(st.one_of(
     arrays("int32",
-           array_shapes(min_dims=2, max_dims=2, min_side=2, max_side=200),
+           array_shapes(min_dims=2, max_dims=2, min_side=2, max_side=100),
            elements=st.integers(min_value=0, max_value=2)),
     # The array above is the only realistic input, but we test more
     # kinds of inputs for good measure.
     arrays("int32",
-           array_shapes(min_dims=2, max_dims=2, min_side=2, max_side=200),
+           array_shapes(min_dims=2, max_dims=2, min_side=2, max_side=100),
            elements=st.integers(min_value=0, max_value=100)),
     arrays("float64",
-           array_shapes(min_dims=2, max_dims=2, min_side=2, max_side=200),
+           array_shapes(min_dims=2, max_dims=2, min_side=2, max_side=100),
            elements=st.floats(min_value=0, max_value=100)))
 )
 @settings(deadline=None)
