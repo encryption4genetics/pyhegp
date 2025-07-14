@@ -20,6 +20,8 @@ import click
 import numpy as np
 from scipy.stats import special_ortho_group
 
+from pyhegp.serialization import Summary, write_summary
+
 def random_key(rng, n):
     return special_ortho_group.rvs(n, random_state=rng)
 
@@ -42,6 +44,19 @@ def read_genotype(genotype_file):
 @click.group()
 def main():
     pass
+
+@main.command()
+@click.argument("genotype-file", type=click.File("r"))
+@click.option("--output", "-o", "summary_file",
+              type=click.File("wb"),
+              default="-",
+              help="output file")
+def summary(genotype_file, summary_file):
+    genotype = read_genotype(genotype_file)
+    write_summary(summary_file,
+                  Summary(genotype.shape[0],
+                          np.mean(genotype, axis=0),
+                          np.std(genotype, axis=0)))
 
 @main.command()
 @click.argument("genotype-file", type=click.File("r"))
