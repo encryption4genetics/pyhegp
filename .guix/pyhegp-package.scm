@@ -17,7 +17,7 @@
 ;;; along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
 (define-module (pyhegp-package)
-  #:use-module ((gnu packages check) #:select (python-hypothesis python-pytest))
+  #:use-module ((gnu packages check) #:select (python-hypothesis-next python-pytest))
   #:use-module ((gnu packages python-build) #:select (python-flit-core))
   #:use-module ((gnu packages python-science) #:select (python-scipy))
   #:use-module ((gnu packages python-xyz) #:select (python-click python-numpy))
@@ -40,7 +40,7 @@
     (build-system pyproject-build-system)
     (native-inputs
      (list python-flit-core
-           python-hypothesis
+           python-hypothesis-next
            python-pytest))
     (propagated-inputs
      (list python-click
