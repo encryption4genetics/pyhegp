@@ -29,10 +29,15 @@ Stats = namedtuple("Stats", "n mean std")
 def random_key(rng, n):
     return special_ortho_group.rvs(n, random_state=rng)
 
-def standardize(genotype_matrix, maf):
-    m, _ = genotype_matrix.shape
-    return ((genotype_matrix - np.tile(maf, (m, 1)))
-            @ np.diag(1 / np.sqrt(2 * maf * (1 - maf))))
+def standardize(matrix, mean, standard_deviation):
+    m, _ = matrix.shape
+    return ((matrix - np.tile(mean, (m, 1)))
+            @ np.diag(1 / standard_deviation))
+
+def unstandardize(matrix, mean, standard_deviation):
+    m, _ = matrix.shape
+    return ((matrix @ np.diag(standard_deviation))
+            + np.tile(mean, (m, 1)))
 
 def hegp_encrypt(plaintext, maf, key):
     return key @ plaintext

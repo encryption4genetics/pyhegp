@@ -21,7 +21,7 @@ from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 from pytest import approx
 
-from pyhegp.pyhegp import Stats, hegp_encrypt, hegp_decrypt, random_key, pool_stats
+from pyhegp.pyhegp import Stats, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize
 
 @given(st.lists(st.lists(arrays("float64",
                                 st.shared(array_shapes(min_dims=1, max_dims=1),
@@ -38,6 +38,9 @@ def test_pool_stats(pools):
     assert (pooled_stats.n == len(combined_pool)
             and pooled_stats.mean == approx(np.mean(combined_pool, axis=0))
             and pooled_stats.std == approx(np.std(combined_pool, axis=0, ddof=1)))
+
+def no_column_zero_standard_deviation(matrix):
+    return not np.any(np.isclose(np.std(matrix, axis=0), 0))
 
 @given(st.one_of(
     arrays("int32",
@@ -58,3 +61,15 @@ def test_hegp_encryption_decryption_are_inverses(plaintext):
     # FIXME: We don't use maf at the moment.
     maf = None
     assert hegp_decrypt(hegp_encrypt(plaintext, maf, key), key) == approx(plaintext)
+
+@given(arrays("float64",
+              array_shapes(min_dims=2, max_dims=2),
+              elements=st.floats(min_value=0, max_value=100))
+       # Reject matrices with zero standard deviation columns since
+       # they trigger a division by zero.
+       .filter(no_column_zero_standard_deviation))
+def test_standardize_unstandardize_are_inverses(matrix):
+    mean = np.mean(matrix, axis=0)
+    standard_deviation = np.std(matrix, axis=0)
+    assert unstandardize(standardize(matrix, mean, standard_deviation),
+                         mean, standard_deviation) == approx(matrix)
