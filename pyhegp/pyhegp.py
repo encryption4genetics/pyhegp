@@ -57,15 +57,5 @@ def encrypt(genotype_file, maf_file, key_path, ciphertext_path):
     np.savetxt(key_path, key, delimiter=",", fmt="%f")
     np.savetxt(ciphertext_path, encrypted_genotype, delimiter=",", fmt="%f")
 
-@main.command()
-@click.argument("key-file", type=click.File("r"))
-@click.argument("ciphertext-file", type=click.File("r"))
-@click.argument("plaintext-path", type=click.Path())
-def decrypt(key_file, ciphertext_file, plaintext_path):
-    key = np.loadtxt(key_file, delimiter=",")
-    ciphertext = np.loadtxt(ciphertext_file, delimiter=",")
-    genotype = hegp_decrypt(ciphertext, key)
-    np.savetxt(plaintext_path, genotype, delimiter=",", fmt="%f")
-
 if __name__ == "__main__":
     main()
