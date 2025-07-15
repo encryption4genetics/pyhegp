@@ -21,7 +21,23 @@ from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 from pytest import approx
 
-from pyhegp.pyhegp import hegp_encrypt, hegp_decrypt, random_key
+from pyhegp.pyhegp import Stats, hegp_encrypt, hegp_decrypt, random_key, pool_stats
+
+@given(st.lists(st.lists(arrays("float64",
+                                st.shared(array_shapes(min_dims=1, max_dims=1),
+                                          key="pool-vector-length"),
+                                elements=st.floats(min_value=-100, max_value=100)),
+                         min_size=2),
+                min_size=1))
+def test_pool_stats(pools):
+    combined_pool = sum(pools, [])
+    pooled_stats = pool_stats([Stats(len(pool),
+                                     np.mean(pool, axis=0),
+                                     np.std(pool, axis=0, ddof=1))
+                               for pool in pools])
+    assert (pooled_stats.n == len(combined_pool)
+            and pooled_stats.mean == approx(np.mean(combined_pool, axis=0))
+            and pooled_stats.std == approx(np.std(combined_pool, axis=0, ddof=1)))
 
 @given(st.one_of(
     arrays("int32",

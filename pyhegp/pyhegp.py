@@ -16,11 +16,15 @@
 ### You should have received a copy of the GNU General Public License
 ### along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
+from collections import namedtuple
+
 import click
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from pyhegp.serialization import Summary, write_summary
+from pyhegp.serialization import Summary, read_summary, write_summary
+
+Stats = namedtuple("Stats", "n mean std")
 
 def random_key(rng, n):
     return special_ortho_group.rvs(n, random_state=rng)
@@ -37,6 +41,16 @@ def hegp_encrypt(plaintext, maf, key):
 
 def hegp_decrypt(ciphertext, key):
     return np.transpose(key) @ ciphertext
+
+def pool_stats(list_of_stats):
+    sums = [stats.n*stats.mean for stats in list_of_stats]
+    sums_of_squares = [(stats.n-1)*stats.std**2 + stats.n*stats.mean**2
+                       for stats in list_of_stats]
+    n = np.sum([stats.n for stats in list_of_stats])
+    mean = np.sum(sums, axis=0) / n
+    std = np.sqrt((np.sum(sums_of_squares, axis=0) - n*mean**2)
+                  / (n - 1))
+    return Stats(n, mean, std)
 
 def read_genotype(genotype_file):
     return np.loadtxt(genotype_file, delimiter=",")
@@ -57,6 +71,21 @@ def summary(genotype_file, summary_file):
                   Summary(genotype.shape[0],
                           np.mean(genotype, axis=0),
                           np.std(genotype, axis=0)))
+
+@main.command()
+@click.option("--output", "-o", "pooled_summary_file",
+              type=click.File("wb"),
+              default="-",
+              help="output file")
+@click.argument("summary-files", type=click.File("rb"), nargs=-1)
+def pool(pooled_summary_file, summary_files):
+    summaries = [read_summary(file) for file in summary_files]
+    pooled_stats = pool_stats([Stats(summary.n, summary.mean, summary.std)
+                               for summary in summaries])
+    write_summary(pooled_summary_file,
+                  Summary(pooled_stats.n,
+                          pooled_stats.mean,
+                          pooled_stats.std))
 
 @main.command()
 @click.argument("genotype-file", type=click.File("r"))
