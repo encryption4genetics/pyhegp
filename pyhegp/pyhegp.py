@@ -39,13 +39,12 @@ def unstandardize(matrix, mean, standard_deviation):
     return ((matrix @ np.diag(standard_deviation))
             + np.tile(mean, (m, 1)))
 
-def hegp_encrypt(plaintext, maf, key):
-    return key @ plaintext
-    # FIXME: Add standardization.
-    # return key @ standardize(plaintext, maf)
+def hegp_encrypt(plaintext, mean, standard_deviation, key):
+    return key @ standardize(plaintext, mean, standard_deviation)
 
-def hegp_decrypt(ciphertext, key):
-    return np.transpose(key) @ ciphertext
+def hegp_decrypt(ciphertext, mean, standard_deviation, key):
+    return unstandardize(np.transpose(key) @ ciphertext,
+                         mean, standard_deviation)
 
 def pool_stats(list_of_stats):
     sums = [stats.n*stats.mean for stats in list_of_stats]
@@ -94,15 +93,16 @@ def pool(pooled_summary_file, summary_files):
 
 @main.command()
 @click.argument("genotype-file", type=click.File("r"))
-@click.argument("maf-file", type=click.File("r"))
+@click.argument("summary-file", type=click.File("rb"))
 @click.argument("key-path", type=click.Path())
 @click.argument("ciphertext-path", type=click.Path())
-def encrypt(genotype_file, maf_file, key_path, ciphertext_path):
+def encrypt(genotype_file, summary_file, key_path, ciphertext_path):
     genotype = read_genotype(genotype_file)
-    maf = np.loadtxt(maf_file)
+    summary = read_summary(summary_file)
     rng = np.random.default_rng()
     key = random_key(rng, len(genotype))
-    encrypted_genotype = hegp_encrypt(genotype, maf, key)
+    encrypted_genotype = hegp_encrypt(genotype, summary.mean,
+                                      summary.std, key)
     np.savetxt(key_path, key, delimiter=",", fmt="%f")
     np.savetxt(ciphertext_path, encrypted_genotype, delimiter=",", fmt="%f")
 

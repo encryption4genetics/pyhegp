@@ -54,13 +54,16 @@ def no_column_zero_standard_deviation(matrix):
     arrays("float64",
            array_shapes(min_dims=2, max_dims=2),
            elements=st.floats(min_value=0, max_value=100)))
-)
+       # Reject matrices with zero standard deviation columns since
+       # they trigger a division by zero.
+       .filter(no_column_zero_standard_deviation))
 def test_hegp_encryption_decryption_are_inverses(plaintext):
+    mean = np.mean(plaintext, axis=0)
+    standard_deviation = np.std(plaintext, axis=0)
     rng = np.random.default_rng()
     key = random_key(rng, len(plaintext))
-    # FIXME: We don't use maf at the moment.
-    maf = None
-    assert hegp_decrypt(hegp_encrypt(plaintext, maf, key), key) == approx(plaintext)
+    assert hegp_decrypt(hegp_encrypt(plaintext, mean, standard_deviation, key),
+                        mean, standard_deviation, key) == approx(plaintext)
 
 @given(arrays("float64",
               array_shapes(min_dims=2, max_dims=2),
