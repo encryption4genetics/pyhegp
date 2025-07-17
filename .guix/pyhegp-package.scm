@@ -17,7 +17,8 @@
 ;;; along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
 (define-module (pyhegp-package)
-  #:use-module ((gnu packages check) #:select (python-hypothesis-next python-pytest))
+  #:use-module ((gnu packages check) #:select (python-hypothesis-next))
+  #:use-module ((gnu packages check) #:select (python-pytest) #:prefix guix:)
   #:use-module ((gnu packages python-build) #:select (python-flit-core))
   #:use-module ((gnu packages python-science) #:select (python-scipy))
   #:use-module ((gnu packages python-xyz) #:select (python-click python-numpy))
@@ -27,6 +28,13 @@
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (guix packages)
   #:use-module (guix utils))
+
+(define python-pytest
+  (package
+    (inherit guix:python-pytest)
+    (native-inputs
+     (modify-inputs (package-native-inputs guix:python-pytest)
+       (replace "python-hypothesis" python-hypothesis-next)))))
 
 (define-public python-pyhegp
   (package
