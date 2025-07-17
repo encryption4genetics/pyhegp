@@ -109,5 +109,17 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
         np.savetxt(key_file, key, delimiter=",", fmt="%f")
     np.savetxt(ciphertext_file, encrypted_genotype, delimiter=",", fmt="%f")
 
+@main.command()
+@click.option("--output", "-o", "output_file",
+              type=click.File("wb"),
+              default="-",
+              help="output file")
+@click.argument("ciphertext-files", type=click.File("rb"), nargs=-1)
+def cat(output_file, ciphertext_files):
+    np.savetxt(output_file,
+               np.vstack([read_genotype(file) for file in ciphertext_files]),
+               delimiter=",",
+               fmt="%f")
+
 if __name__ == "__main__":
     main()
