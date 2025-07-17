@@ -1,5 +1,19 @@
 pyhegp is a Python library and CLI utility implementing homomorphic encryption of genotypes and phenotypes as described in [Private Genomes and Public SNPs: Homomorphic Encryption of Genotypes and Phenotypes for Shared Quantitative Genetics](https://academic.oup.com/genetics/article/215/2/359/5930450).
 
+# Install development version
+
+In a new directory, create a python virtual environment and activate it.
+```
+mkdir pyhegp
+cd pyhegp
+python3 -m venv .venv
+source .venv/bin/activate
+```
+Install the development version of pyhegp into the virtual environment.
+```
+pip install git+https://github.com/encryption4genetics/pyhegp
+```
+
 # Run tests
 
 Run the test suite using
