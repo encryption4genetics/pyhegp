@@ -90,9 +90,15 @@ def pool(pooled_summary_file, summary_files):
 
 @main.command()
 @click.argument("genotype-file", type=click.File("r"))
-@click.argument("summary-file", type=click.File("rb"))
-@click.argument("key-path", type=click.Path())
-@click.argument("ciphertext-path", type=click.Path())
+@click.option("--summary", "-s", "summary_file", type=click.File("rb"),
+              help="Summary statistics file",
+              required=True)
+@click.option("--key", "-k", "key_path", type=click.Path(),
+              help="Output key",
+              required=True)
+@click.option("--output", "-o", "ciphertext_path", type=click.Path(),
+              default="-",
+              help="Output ciphertext")
 def encrypt(genotype_file, summary_file, key_path, ciphertext_path):
     genotype = read_genotype(genotype_file)
     summary = read_summary(summary_file)
