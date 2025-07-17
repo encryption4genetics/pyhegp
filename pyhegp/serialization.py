@@ -51,3 +51,6 @@ def write_summary(file, summary):
     np.savetxt(file,
                np.row_stack((summary.mean, summary.std)),
                fmt="%.8g")
+
+def read_genotype(genotype_file):
+    return np.loadtxt(genotype_file, delimiter=",")

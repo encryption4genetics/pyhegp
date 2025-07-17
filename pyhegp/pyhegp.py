@@ -22,7 +22,7 @@ import click
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from pyhegp.serialization import Summary, read_summary, write_summary
+from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype
 
 Stats = namedtuple("Stats", "n mean std")
 
@@ -55,9 +55,6 @@ def pool_stats(list_of_stats):
     std = np.sqrt((np.sum(sums_of_squares, axis=0) - n*mean**2)
                   / (n - 1))
     return Stats(n, mean, std)
-
-def read_genotype(genotype_file):
-    return np.loadtxt(genotype_file, delimiter=",")
 
 @click.group()
 def main():
