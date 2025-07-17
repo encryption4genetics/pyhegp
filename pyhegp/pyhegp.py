@@ -94,8 +94,7 @@ def pool(pooled_summary_file, summary_files):
               help="Summary statistics file",
               required=True)
 @click.option("--key", "-k", "key_file", type=click.File("w"),
-              help="Output key",
-              required=True)
+              help="Output key")
 @click.option("--output", "-o", "ciphertext_file", type=click.File("w"),
               default="-",
               help="Output ciphertext")
@@ -106,7 +105,8 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
     key = random_key(rng, len(genotype))
     encrypted_genotype = hegp_encrypt(genotype, summary.mean,
                                       summary.std, key)
-    np.savetxt(key_file, key, delimiter=",", fmt="%f")
+    if key_file:
+        np.savetxt(key_file, key, delimiter=",", fmt="%f")
     np.savetxt(ciphertext_file, encrypted_genotype, delimiter=",", fmt="%f")
 
 if __name__ == "__main__":
