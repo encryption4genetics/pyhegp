@@ -1,3 +1,5 @@
+[![Laminar](https://ci.systemreboot.net/badge/pyhegp.svg)](https://ci.systemreboot.net/jobs/pyhegp)
+
 pyhegp is a Python library and CLI utility implementing homomorphic encryption of genotypes and phenotypes as described in [Private Genomes and Public SNPs: Homomorphic Encryption of Genotypes and Phenotypes for Shared Quantitative Genetics](https://academic.oup.com/genetics/article/215/2/359/5930450).
 
 # Install development version
