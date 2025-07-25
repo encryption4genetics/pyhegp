@@ -16,6 +16,8 @@
 ### You should have received a copy of the GNU General Public License
 ### along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
+import math
+
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
@@ -70,3 +72,33 @@ def test_standardize_unstandardize_are_inverses(matrix):
     standard_deviation = np.std(matrix, axis=0)
     assert unstandardize(standardize(matrix, mean, standard_deviation),
                          mean, standard_deviation) == approx(matrix)
+
+def square_matrices(order, elements=None):
+    def generate(draw):
+        n = draw(order)
+        return draw(arrays("float64", (n, n), elements=elements))
+    return st.composite(generate)
+
+def negate(predicate):
+    return lambda *args, **kwargs: not predicate(*args, **kwargs)
+
+def is_singular(matrix):
+    # We want to avoid nearly singular matrices as well. Hence, we set
+    # a looser absolute tolerance.
+    return math.isclose(np.linalg.det(matrix), 0, abs_tol=1e-6)
+
+@given(square_matrices(st.shared(st.integers(min_value=2, max_value=7),
+                                 key="n"),
+                       elements=st.floats(min_value=0, max_value=10))()
+       .filter(negate(is_singular)),
+       arrays("float64",
+              st.shared(st.integers(min_value=2, max_value=7),
+                        key="n"),
+              elements=st.floats(min_value=0, max_value=10)))
+def test_conservation_of_solutions(genotype, phenotype):
+    rng = np.random.default_rng()
+    key = random_key(rng, len(genotype))
+    assert (approx(np.linalg.solve(genotype, phenotype),
+                   abs=1e-6, rel=1e-6)
+            == np.linalg.solve(hegp_encrypt(genotype, key),
+                               hegp_encrypt(phenotype, key)))
