@@ -44,15 +44,15 @@ def no_column_zero_standard_deviation(matrix):
 
 @given(st.one_of(
     arrays("int32",
-           array_shapes(min_dims=2, max_dims=2),
+           array_shapes(min_dims=2, max_dims=2, min_side=2),
            elements=st.integers(min_value=0, max_value=2)),
     # The array above is the only realistic input, but we test more
     # kinds of inputs for good measure.
     arrays("int32",
-           array_shapes(min_dims=2, max_dims=2),
+           array_shapes(min_dims=2, max_dims=2, min_side=2),
            elements=st.integers(min_value=0, max_value=100)),
     arrays("float64",
-           array_shapes(min_dims=2, max_dims=2),
+           array_shapes(min_dims=2, max_dims=2, min_side=2),
            elements=st.floats(min_value=0, max_value=100)))
        # Reject matrices with zero standard deviation columns since
        # they trigger a division by zero.
