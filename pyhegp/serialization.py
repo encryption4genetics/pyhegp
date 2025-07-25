@@ -54,7 +54,7 @@ def write_summary(file, summary):
                fmt="%.8g")
 
 def read_genotype(genotype_file):
-    return np.loadtxt(genotype_file, delimiter=",")
+    return np.loadtxt(genotype_file, delimiter=",", ndmin=2)
 
 def write_genotype(file, genotype):
     np.savetxt(file, genotype, delimiter=",", fmt="%.8g")
