@@ -39,12 +39,11 @@ def unstandardize(matrix, mean, standard_deviation):
     return ((matrix @ np.diag(standard_deviation))
             + np.tile(mean, (m, 1)))
 
-def hegp_encrypt(plaintext, mean, standard_deviation, key):
-    return key @ standardize(plaintext, mean, standard_deviation)
+def hegp_encrypt(plaintext, key):
+    return key @ plaintext
 
-def hegp_decrypt(ciphertext, mean, standard_deviation, key):
-    return unstandardize(np.transpose(key) @ ciphertext,
-                         mean, standard_deviation)
+def hegp_decrypt(ciphertext, key):
+    return np.transpose(key) @ ciphertext
 
 def pool_stats(list_of_stats):
     sums = [stats.n*stats.mean for stats in list_of_stats]
@@ -103,8 +102,10 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
     summary = read_summary(summary_file)
     rng = np.random.default_rng()
     key = random_key(rng, len(genotype))
-    encrypted_genotype = hegp_encrypt(genotype, summary.mean,
-                                      summary.std, key)
+    encrypted_genotype = hegp_encrypt(standardize(genotype,
+                                                  summary.mean,
+                                                  summary.std),
+                                      key)
     if key_file:
         np.savetxt(key_file, key, delimiter=",", fmt="%f")
     np.savetxt(ciphertext_file, encrypted_genotype, delimiter=",", fmt="%f")
