@@ -22,7 +22,7 @@ from hypothesis import given, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 from pytest import approx
 
-from pyhegp.serialization import Summary, read_summary, write_summary, read_summary_headers
+from pyhegp.serialization import Summary, read_summary, write_summary, read_summary_headers, read_genotype, write_genotype
 
 @given(st.integers(),
        arrays("float64",
@@ -68,3 +68,12 @@ def test_read_summary_headers_variable_whitespace(properties_and_whitespace):
             file.write(f"{key} {value}\n".encode("ascii"))
         file.seek(0)
         assert properties == read_summary_headers(file)
+
+@given(arrays("float64",
+              array_shapes(min_dims=2, max_dims=2),
+              elements=st.floats(min_value=0, max_value=100)))
+def test_read_write_genotype_are_inverses(genotype):
+    with tempfile.TemporaryFile() as file:
+        write_genotype(file, genotype)
+        file.seek(0)
+        assert genotype == approx(read_genotype(file))
