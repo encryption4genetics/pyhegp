@@ -22,7 +22,7 @@ import click
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype
+from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, write_genotype
 
 Stats = namedtuple("Stats", "n mean std")
 
@@ -108,7 +108,7 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
                                       key)
     if key_file:
         np.savetxt(key_file, key, delimiter=",", fmt="%f")
-    np.savetxt(ciphertext_file, encrypted_genotype, delimiter=",", fmt="%f")
+    write_genotype(ciphertext_file, encrypted_genotype)
 
 @main.command()
 @click.option("--output", "-o", "output_file",
@@ -117,10 +117,8 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
               help="output file")
 @click.argument("ciphertext-files", type=click.File("rb"), nargs=-1)
 def cat(output_file, ciphertext_files):
-    np.savetxt(output_file,
-               np.vstack([read_genotype(file) for file in ciphertext_files]),
-               delimiter=",",
-               fmt="%f")
+    write_genotype(output_file,
+                   np.vstack([read_genotype(file) for file in ciphertext_files]))
 
 if __name__ == "__main__":
     main()
