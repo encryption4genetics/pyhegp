@@ -43,13 +43,14 @@ def read_summary_headers(file):
 def read_summary(file):
     headers = read_summary_headers(file)
     return Summary(int(headers["number-of-samples"]),
-                   *np.loadtxt(file, ndmin=2))
+                   *np.loadtxt(file, ndmin=2, delimiter="\t"))
 
 def write_summary(file, summary):
     file.write(SUMMARY_HEADER)
     file.write(f"# number-of-samples {summary.n}\n".encode("ascii"))
     np.savetxt(file,
                np.row_stack((summary.mean, summary.std)),
+               delimiter="\t",
                fmt="%.8g")
 
 def read_genotype(genotype_file):
