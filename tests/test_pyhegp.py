@@ -105,7 +105,6 @@ def test_conservation_of_solutions(genotype, phenotype):
             == np.linalg.solve(hegp_encrypt(genotype, key),
                                hegp_encrypt(phenotype, key)))
 
-@pytest.mark.xfail
 def test_simple_workflow():
     result = CliRunner().invoke(main,
                                 ["encrypt",
