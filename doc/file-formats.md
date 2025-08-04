@@ -20,3 +20,10 @@ the `reference` column is optional, and should be absent in encrypted genotype f
 
 Here is an example genotype file.
 `TODO: Add example.`
+
+## key file
+
+The key file is a tab-separated values (TSV) file with numerical data. There MUST be no column headers.
+
+Here is an example key file.
+`TODO: Add example.`

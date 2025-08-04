@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import special_ortho_group
 
-from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, write_genotype
+from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, write_genotype, write_key
 
 Stats = namedtuple("Stats", "n mean std")
 
@@ -123,7 +123,7 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
         summary.data["std"].to_numpy()),
                                              key)
     if key_file:
-        np.savetxt(key_file, key, delimiter=",", fmt="%f")
+        write_key(key_file, key)
     write_genotype(ciphertext_file,
                    pd.concat((genotype[["chromosome", "position"]],
                               pd.DataFrame(encrypted_genotype_matrix.T,

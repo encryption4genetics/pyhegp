@@ -20,6 +20,7 @@ from collections import namedtuple
 import csv
 from itertools import takewhile
 
+import numpy as np
 import pandas as pd
 
 SUMMARY_HEADER = b"# pyhegp summary file version 1\n"
@@ -87,3 +88,9 @@ def write_genotype(file, genotype):
              sep="\t",
              float_format="%.8g",
              index=False))
+
+def read_key(file):
+    return np.loadtxt(file, delimiter="\t", ndmin=2)
+
+def write_key(file, key):
+    return np.savetxt(file, key, delimiter="\t", fmt="%.8g")

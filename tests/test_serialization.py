@@ -19,10 +19,12 @@
 import tempfile
 
 from hypothesis import given, strategies as st
+from hypothesis.extra.numpy import arrays, array_shapes
 from hypothesis.extra.pandas import column, columns, data_frames
 import pandas as pd
+from pytest import approx
 
-from pyhegp.serialization import Summary, read_summary, write_summary, read_summary_headers, read_genotype, write_genotype
+from pyhegp.serialization import Summary, read_summary, write_summary, read_summary_headers, read_genotype, write_genotype, read_key, write_key
 from pyhegp.utils import negate
 
 tabless_printable_ascii_text = st.text(
@@ -115,3 +117,11 @@ def test_read_write_genotype_are_inverses(genotype):
         write_genotype(file, genotype)
         file.seek(0)
         pd.testing.assert_frame_equal(genotype, read_genotype(file))
+
+@given(arrays("float64",
+              array_shapes(min_dims=2, max_dims=2)))
+def test_read_write_key_are_inverses(key):
+    with tempfile.TemporaryFile() as file:
+        write_key(file, key)
+        file.seek(0)
+        assert key == approx(read_key(file), nan_ok=True)
