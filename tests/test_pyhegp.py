@@ -22,6 +22,7 @@ from click.testing import CliRunner
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
+import pytest
 from pytest import approx
 
 from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize
@@ -103,6 +104,14 @@ def test_conservation_of_solutions(genotype, phenotype):
                    abs=1e-6, rel=1e-6)
             == np.linalg.solve(hegp_encrypt(genotype, key),
                                hegp_encrypt(phenotype, key)))
+
+@pytest.mark.xfail
+def test_simple_workflow():
+    result = CliRunner().invoke(main,
+                                ["encrypt",
+                                 "-o", "encrypted-genotype.tsv",
+                                 "test-data/genotype.tsv"])
+    assert result.exit_code == 0
 
 def test_joint_workflow(tmp_path):
     runner = CliRunner()

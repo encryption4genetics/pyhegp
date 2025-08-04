@@ -19,8 +19,19 @@ pip install git+https://github.com/encryption4genetics/pyhegp
 ```
 
 # How to use
+## Simple data sharing
 
-![Workflow](doc/workflow.png)
+![Simple data sharing workflow](doc/simple-workflow.png)
+
+In this simple scenario, there is only one data owner and they wish to share their encrypted data with a researcher. The data owner encrypts their data with:
+```
+pyhegp encrypt -o encrypted-genotype.tsv genotype.tsv
+```
+They then send the encrypted data to the researcher. Note that data sharing is carried out-of-band and is outside the scope of `pyhegp`.
+
+## Joint/federated analysis with many data owners
+
+![Joint/federated analysis workflow](doc/joint-workflow.png)
 
 Data owners generate summary statistics for their data.
 ```
