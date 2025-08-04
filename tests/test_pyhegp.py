@@ -24,6 +24,7 @@ import numpy as np
 from pytest import approx
 
 from pyhegp.pyhegp import Stats, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize
+from pyhegp.utils import negate
 
 @given(st.lists(st.lists(arrays("float64",
                                 st.shared(array_shapes(min_dims=1, max_dims=1),
@@ -80,9 +81,6 @@ def square_matrices(order, elements=None):
         n = draw(order)
         return draw(arrays("float64", (n, n), elements=elements))
     return st.composite(generate)
-
-def negate(predicate):
-    return lambda *args, **kwargs: not predicate(*args, **kwargs)
 
 def is_singular(matrix):
     # We want to avoid nearly singular matrices as well. Hence, we set
