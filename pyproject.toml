@@ -18,6 +18,7 @@ license = {file = "COPYING"}
 dependencies = [
   "click",
   "numpy",
+  "pandas",
   "scipy"
 ]
 

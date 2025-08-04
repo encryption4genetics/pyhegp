@@ -20,7 +20,7 @@
   #:use-module ((gnu packages check) #:select (python-hypothesis-next))
   #:use-module ((gnu packages check) #:select (python-pytest) #:prefix guix:)
   #:use-module ((gnu packages python-build) #:select (python-flit-core))
-  #:use-module ((gnu packages python-science) #:select (python-scipy))
+  #:use-module ((gnu packages python-science) #:select (python-pandas python-scipy))
   #:use-module ((gnu packages python-xyz) #:select (python-click python-numpy))
   #:use-module (guix build-system pyproject)
   #:use-module (guix gexp)
@@ -53,6 +53,7 @@
     (propagated-inputs
      (list python-click
            python-numpy
+           python-pandas
            python-scipy))
     (home-page "https://github.com/encryption4genetics/pyhegp")
     (synopsis "Homomorphic encryption of genotypes and phenotypes")

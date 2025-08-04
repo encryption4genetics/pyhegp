@@ -17,13 +17,14 @@
 ### along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
 from collections import namedtuple
+import csv
 from itertools import takewhile
 
-import numpy as np
+import pandas as pd
 
 SUMMARY_HEADER = b"# pyhegp summary file version 1\n"
 
-Summary = namedtuple("Summary", "n mean std")
+Summary = namedtuple("Summary", "n data")
 
 def peek(file):
     c = file.read(1)
@@ -43,18 +44,46 @@ def read_summary_headers(file):
 def read_summary(file):
     headers = read_summary_headers(file)
     return Summary(int(headers["number-of-samples"]),
-                   *np.loadtxt(file, ndmin=2, delimiter="\t"))
+                   pd.read_csv(file,
+                               sep="\t",
+                               header=0,
+                               dtype={"chromosome": "str",
+                                      "position": "int",
+                                      "reference": "str",
+                                      "mean": "float",
+                                      "standard-deviation": "float"},
+                               na_filter=False)
+                   .rename(columns={"standard-deviation": "std"}))
 
 def write_summary(file, summary):
     file.write(SUMMARY_HEADER)
     file.write(f"# number-of-samples {summary.n}\n".encode("ascii"))
-    np.savetxt(file,
-               np.row_stack((summary.mean, summary.std)),
-               delimiter="\t",
-               fmt="%.8g")
+    (summary.data
+     .rename(columns={"std": "standard-deviation"})
+     .to_csv(file,
+             sep="\t",
+             float_format="%.8g",
+             index=False))
 
 def read_genotype(file):
-    return np.loadtxt(file, delimiter=",", ndmin=2)
+    df = pd.read_csv(file,
+                     quoting=csv.QUOTE_NONE,
+                     sep="\t",
+                     na_filter=False)
+    sample_columns = [column
+                      for column in df.columns
+                      if column not in ["chromosome", "position", "reference"]]
+    df.chromosome = df.chromosome.astype("str")
+    df.position = df.position.astype("int")
+    if "reference" in df:
+        df.reference = df.reference.astype("str")
+    df[sample_columns] = df[sample_columns].astype("float")
+    return df
 
 def write_genotype(file, genotype):
-    np.savetxt(file, genotype, delimiter=",", fmt="%.8g")
+    (genotype
+     .to_csv(file,
+             quoting=csv.QUOTE_NONE,
+             sep="\t",
+             float_format="%.8g",
+             index=False))

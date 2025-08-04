@@ -20,6 +20,7 @@ from collections import namedtuple
 
 import click
 import numpy as np
+import pandas as pd
 from scipy.stats import special_ortho_group
 
 from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, write_genotype
@@ -67,10 +68,14 @@ def main():
               help="output file")
 def summary(genotype_file, summary_file):
     genotype = read_genotype(genotype_file)
+    matrix = genotype.drop(columns=["chromosome", "position", "reference"]).to_numpy()
     write_summary(summary_file,
                   Summary(genotype.shape[0],
-                          np.mean(genotype, axis=0),
-                          np.std(genotype, axis=0)))
+                          pd.DataFrame({"chromosome": genotype.chromosome,
+                                        "position": genotype.position,
+                                        "reference": genotype.reference,
+                                        "mean": np.mean(matrix, axis=1),
+                                        "std": np.std(matrix, axis=1)})))
 
 @main.command()
 @click.option("--output", "-o", "pooled_summary_file",
@@ -80,12 +85,16 @@ def summary(genotype_file, summary_file):
 @click.argument("summary-files", type=click.File("rb"), nargs=-1)
 def pool(pooled_summary_file, summary_files):
     summaries = [read_summary(file) for file in summary_files]
-    pooled_stats = pool_stats([Stats(summary.n, summary.mean, summary.std)
+    pooled_stats = pool_stats([Stats(summary.n,
+                                     summary.data["mean"].to_numpy(),
+                                     summary.data["std"].to_numpy())
                                for summary in summaries])
     write_summary(pooled_summary_file,
                   Summary(pooled_stats.n,
-                          pooled_stats.mean,
-                          pooled_stats.std))
+                          pd.concat((summaries[0].data[["chromosome", "position"]],
+                                     pd.DataFrame({"mean": pooled_stats.mean,
+                                                   "std": pooled_stats.std})),
+                                    axis="columns")))
 
 @main.command()
 @click.argument("genotype-file", type=click.File("r"))
@@ -99,16 +108,23 @@ def pool(pooled_summary_file, summary_files):
               help="Output ciphertext")
 def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
     genotype = read_genotype(genotype_file)
+    sample_names = genotype.drop(columns=["chromosome", "position", "reference"]).columns
+    genotype_matrix = genotype[sample_names].to_numpy().T
     summary = read_summary(summary_file)
     rng = np.random.default_rng()
-    key = random_key(rng, len(genotype))
-    encrypted_genotype = hegp_encrypt(standardize(genotype,
-                                                  summary.mean,
-                                                  summary.std),
-                                      key)
+    key = random_key(rng, len(genotype_matrix))
+    encrypted_genotype_matrix = hegp_encrypt(standardize(
+        genotype_matrix,
+        summary.data["mean"].to_numpy(),
+        summary.data["std"].to_numpy()),
+                                             key)
     if key_file:
         np.savetxt(key_file, key, delimiter=",", fmt="%f")
-    write_genotype(ciphertext_file, encrypted_genotype)
+    write_genotype(ciphertext_file,
+                   pd.concat((genotype[["chromosome", "position"]],
+                              pd.DataFrame(encrypted_genotype_matrix.T,
+                                           columns=sample_names)),
+                             axis="columns"))
 
 @main.command()
 @click.option("--output", "-o", "output_file",
@@ -118,7 +134,7 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
 @click.argument("ciphertext-files", type=click.File("rb"), nargs=-1)
 def cat(output_file, ciphertext_files):
     write_genotype(output_file,
-                   np.vstack([read_genotype(file) for file in ciphertext_files]))
+                   pd.concat([read_genotype(file) for file in ciphertext_files]))
 
 if __name__ == "__main__":
     main()
