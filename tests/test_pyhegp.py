@@ -18,12 +18,13 @@
 
 import math
 
+from click.testing import CliRunner
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 from pytest import approx
 
-from pyhegp.pyhegp import Stats, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize
+from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize
 from pyhegp.utils import negate
 
 @given(st.lists(st.lists(arrays("float64",
@@ -102,3 +103,28 @@ def test_conservation_of_solutions(genotype, phenotype):
                    abs=1e-6, rel=1e-6)
             == np.linalg.solve(hegp_encrypt(genotype, key),
                                hegp_encrypt(phenotype, key)))
+
+def test_joint_workflow(tmp_path):
+    runner = CliRunner()
+    for i in range(4):
+        result = runner.invoke(
+            main, ["summary", f"test-data/genotype{i}.tsv",
+                   "-o", tmp_path / f"summary{i}"])
+        assert result.exit_code == 0
+    result = runner.invoke(
+        main, ["pool",
+               "-o", tmp_path / "complete-summary",
+               *(str(tmp_path / f"summary{i}") for i in range(4))])
+    assert result.exit_code == 0
+    for i in range(4):
+        result = runner.invoke(
+            main, ["encrypt",
+                   "-s", tmp_path / "complete-summary",
+                   "-o", tmp_path / f"encrypted-genotype{i}.tsv",
+                   f"test-data/genotype{i}.tsv"])
+        assert result.exit_code == 0
+    result = runner.invoke(
+        main, ["cat",
+               "-o", tmp_path / "complete-encrypted-genotype.tsv",
+               *(str(tmp_path / f"encrypted-genotype{i}.tsv") for i in range(4))])
+    assert result.exit_code == 0
