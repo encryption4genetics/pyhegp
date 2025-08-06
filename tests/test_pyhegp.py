@@ -38,8 +38,10 @@ def test_pool_stats(pools):
                                      np.std(pool, axis=0, ddof=1))
                                for pool in pools])
     assert (pooled_stats.n == len(combined_pool)
-            and pooled_stats.mean == approx(np.mean(combined_pool, axis=0))
-            and pooled_stats.std == approx(np.std(combined_pool, axis=0, ddof=1)))
+            and pooled_stats.mean == approx(np.mean(combined_pool, axis=0),
+                                            rel=1e-6)
+            and pooled_stats.std == approx(np.std(combined_pool, axis=0, ddof=1),
+                                           rel=1e-6))
 
 def no_column_zero_standard_deviation(matrix):
     return not np.any(np.isclose(np.std(matrix, axis=0), 0))
