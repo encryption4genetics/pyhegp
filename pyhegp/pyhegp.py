@@ -17,6 +17,7 @@
 ### along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
 from collections import namedtuple
+from functools import reduce
 
 import click
 import numpy as np
@@ -65,6 +66,48 @@ def pool_stats(list_of_stats):
                   / (n - 1))
     return Stats(n, mean, std)
 
+def pool_summaries(summaries):
+    def pool_summaries2(summary1, summary2):
+        # Drop any SNPs that are not in both summaries.
+        data = pd.merge(summary1.data.rename(columns={"mean": "mean1",
+                                                      "std": "std1"}),
+                        summary2.data.rename(columns={"mean": "mean2",
+                                                      "std": "std2"}),
+                        how="inner",
+                        on=("chromosome", "position", "reference"))
+        pooled_stats = pool_stats([Stats(summary1.n,
+                                         data.mean1.to_numpy(),
+                                         data.std2.to_numpy()),
+                                   Stats(summary2.n,
+                                         data.mean2.to_numpy(),
+                                         data.std2.to_numpy())])
+        return Summary(pooled_stats.n,
+                       pd.concat((data[["chromosome", "position", "reference"]],
+                                  pd.DataFrame({"mean": pooled_stats.mean,
+                                                "std": pooled_stats.std})),
+                                 axis="columns"))
+    pooled_summary = reduce(pool_summaries2, summaries)
+    return Summary(pooled_summary.n,
+                   pooled_summary.data.drop(columns=["reference"]))
+
+def encrypt_genotype(genotype, key, summary):
+    # Drop any SNPs tha are not in both genotype and summary.
+    common_genotype = pd.merge(genotype,
+                               summary.data[["chromosome", "position"]],
+                               on=("chromosome", "position"))
+    sample_names = (common_genotype.drop(
+        columns=["chromosome", "position", "reference"]).columns)
+    genotype_matrix = common_genotype[sample_names].to_numpy().T
+    encrypted_genotype_matrix = hegp_encrypt(standardize(
+        genotype_matrix,
+        summary.data["mean"].to_numpy(),
+        summary.data["std"].to_numpy()),
+                                             key)
+    return pd.concat((common_genotype[["chromosome", "position"]],
+                      pd.DataFrame(encrypted_genotype_matrix.T,
+                                   columns=sample_names)),
+                     axis="columns")
+
 @click.group()
 def main():
     pass
@@ -87,16 +130,13 @@ def summary(genotype_file, summary_file):
 @click.argument("summary-files", type=click.File("rb"), nargs=-1)
 def pool(pooled_summary_file, summary_files):
     summaries = [read_summary(file) for file in summary_files]
-    pooled_stats = pool_stats([Stats(summary.n,
-                                     summary.data["mean"].to_numpy(),
-                                     summary.data["std"].to_numpy())
-                               for summary in summaries])
-    write_summary(pooled_summary_file,
-                  Summary(pooled_stats.n,
-                          pd.concat((summaries[0].data[["chromosome", "position"]],
-                                     pd.DataFrame({"mean": pooled_stats.mean,
-                                                   "std": pooled_stats.std})),
-                                    axis="columns")))
+    pooled_summary = pool_summaries(summaries)
+    max_snps = max(len(summary.data) for summary in summaries)
+    if len(pooled_summary.data) < max_snps:
+        dropped_snps = max_snps - len(pooled_summary.data)
+        # TODO: Use logging.
+        print(f"Dropped {dropped_snps} SNP(s)")
+    write_summary(pooled_summary_file, pooled_summary)
 
 @main.command()
 @click.argument("genotype-file", type=click.File("r"))
@@ -109,26 +149,22 @@ def pool(pooled_summary_file, summary_files):
               help="Output ciphertext")
 def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
     genotype = read_genotype(genotype_file)
-    sample_names = genotype.drop(columns=["chromosome", "position", "reference"]).columns
-    genotype_matrix = genotype[sample_names].to_numpy().T
     if summary_file:
         summary = read_summary(summary_file)
     else:
         summary = genotype_summary(genotype)
-    rng = np.random.default_rng()
-    key = random_key(rng, len(genotype_matrix))
-    encrypted_genotype_matrix = hegp_encrypt(standardize(
-        genotype_matrix,
-        summary.data["mean"].to_numpy(),
-        summary.data["std"].to_numpy()),
-                                             key)
+    key = random_key(np.random.default_rng(),
+                     len(genotype
+                         .drop(columns=["chromosome", "position", "reference"])
+                         .columns))
     if key_file:
         write_key(key_file, key)
-    write_genotype(ciphertext_file,
-                   pd.concat((genotype[["chromosome", "position"]],
-                              pd.DataFrame(encrypted_genotype_matrix.T,
-                                           columns=sample_names)),
-                             axis="columns"))
+    encrypted_genotype = encrypt_genotype(genotype, key, summary)
+    if len(encrypted_genotype) < len(genotype):
+        dropped_snps = len(genotype) - len(encrypted_genotype)
+        # TODO: Use logging.
+        print(f"Dropped {dropped_snps} SNP(s)")
+    write_genotype(ciphertext_file, encrypted_genotype)
 
 @main.command()
 @click.option("--output", "-o", "output_file",

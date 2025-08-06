@@ -1,0 +1,5 @@
+# pyhegp summary file version 1
+# number-of-samples 10
+chromosome	position	reference	mean	standard-deviation
+chr1	1	A	0	1
+chr2	19	G	2	3

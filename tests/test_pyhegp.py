@@ -22,10 +22,12 @@ from click.testing import CliRunner
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
+import pandas as pd
 import pytest
 from pytest import approx
 
 from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize
+from pyhegp.serialization import Summary, read_summary, read_genotype
 from pyhegp.utils import negate
 
 @given(st.lists(st.lists(arrays("float64",
@@ -45,6 +47,19 @@ def test_pool_stats(pools):
                                             rel=1e-6)
             and pooled_stats.std == approx(np.std(combined_pool, axis=0, ddof=1),
                                            rel=1e-6))
+
+def test_encrypt(tmp_path):
+    result = CliRunner().invoke(main, ["encrypt",
+                                       "-s", "test-data/encrypt-test-summary",
+                                       "-o", tmp_path / "encrypted-genotype.tsv",
+                                       "test-data/encrypt-test-genotype.tsv"])
+    assert result.exit_code == 0
+    assert "Dropped 1 SNP(s)" in result.output
+    with open(tmp_path / "encrypted-genotype.tsv", "rb") as genotype_file:
+        encrypted_genotype = read_genotype(genotype_file)
+    # TODO: Properly compare encrypted genotype data frame with
+    # expected output once it is possible to specify the key.
+    assert len(encrypted_genotype) == 3
 
 def no_column_zero_standard_deviation(matrix):
     return not np.any(np.isclose(np.std(matrix, axis=0), 0))
@@ -104,6 +119,23 @@ def test_conservation_of_solutions(genotype, phenotype):
                    abs=1e-6, rel=1e-6)
             == np.linalg.solve(hegp_encrypt(genotype, key),
                                hegp_encrypt(phenotype, key)))
+
+def test_pool(tmp_path):
+    columns = ["chromosome", "position", "reference", "mean", "std"]
+    result = CliRunner().invoke(main, ["pool",
+                                       "-o", tmp_path / "complete-summary",
+                                       "test-data/pool-test-summary1",
+                                       "test-data/pool-test-summary2"],
+                                catch_exceptions=True)
+    assert result.exit_code == 0
+    assert "Dropped 2 SNP(s)" in result.output
+    with open(tmp_path / "complete-summary", "rb") as summary_file:
+        pooled_summary = read_summary(summary_file)
+    with open("test-data/pool-test-complete-summary", "rb") as summary_file:
+        expected_pooled_summary = read_summary(summary_file)
+    pd.testing.assert_frame_equal(pooled_summary.data,
+                                  expected_pooled_summary.data)
+    assert pooled_summary.n == expected_pooled_summary.n
 
 def test_simple_workflow():
     result = CliRunner().invoke(main,
