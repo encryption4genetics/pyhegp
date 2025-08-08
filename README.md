@@ -64,7 +64,7 @@ They then send the encrypted data to the researcher. Note that data sharing is c
 
 Data owners generate summary statistics for their data.
 ```
-pyhegp summary genotype.csv -o summary
+pyhegp summary genotype.tsv -o summary
 ```
 They share this with the data broker who pools it to compute the summary statistics of the complete dataset.
 ```
@@ -72,11 +72,11 @@ pyhegp pool -o complete-summary summary1 summary2 ...
 ```
 The data broker shares these summary statistics with the data owners. The data owners standardize their data using these summary statistics, and encrypt their data using a random key.
 ```
-pyhegp encrypt -s complete-summary -o encrypted-genotype.csv genotype.csv
+pyhegp encrypt -s complete-summary -o encrypted-genotype.tsv genotype.tsv
 ```
 Finally, the data owners share the encrypted data with the broker who concatenates it and shares it with all parties.
 ```
-pyhegp cat -o complete-encrypted-genotype.csv encrypted-genotype1.csv encrypted-genotype2.csv ...
+pyhegp cat -o complete-encrypted-genotype.tsv encrypted-genotype1.tsv encrypted-genotype2.tsv ...
 ```
 Note that all data sharing is carried out-of-band and is outside the scope of `pyhegp`.
 
