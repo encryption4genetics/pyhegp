@@ -101,6 +101,7 @@ Run the test suite using
 ```
 python3 -m pytest
 ```
+The test suite is not meant to be run by end users. It is meant to be run by developers when hacking on the code.
 
 # License
 
