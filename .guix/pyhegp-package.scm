@@ -36,9 +36,9 @@
      (modify-inputs (package-native-inputs guix:python-pytest)
        (replace "python-hypothesis" python-hypothesis-next)))))
 
-(define-public python-pyhegp
+(define-public pyhegp
   (package
-    (name "python-pyhegp")
+    (name "pyhegp")
     (version "0.1.0")
     (source (local-file ".."
                         "pyhegp-checkout"
@@ -46,19 +46,19 @@
                         #:select? (or (git-predicate (dirname (current-source-directory)))
                                       (const #t))))
     (build-system pyproject-build-system)
-    (native-inputs
-     (list python-flit-core
-           python-hypothesis-next
-           python-pytest))
-    (propagated-inputs
+    (inputs
      (list python-click
            python-numpy
            python-pandas
            python-scipy))
+    (native-inputs
+     (list python-flit-core
+           python-hypothesis-next
+           python-pytest))
     (home-page "https://github.com/encryption4genetics/pyhegp")
     (synopsis "Homomorphic encryption of genotypes and phenotypes")
-    (description "@code{python-pyhegp} provides a Python library and CLI utilities
+    (description "@code{python-pyhegp} provides CLI utilities
 implementing homomorphic encryption of genotypes and phenotypes.")
     (license license:gpl3+)))
 
-python-pyhegp
+pyhegp
