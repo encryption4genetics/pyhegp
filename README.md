@@ -80,6 +80,10 @@ pyhegp cat -o complete-encrypted-genotype.csv encrypted-genotype1.csv encrypted-
 ```
 Note that all data sharing is carried out-of-band and is outside the scope of `pyhegp`.
 
+# File formats
+
+See [File formats](doc/file-formats.md) for documentation of file formats used by pyhegp.
+
 # Run tests
 
 Run the test suite using
