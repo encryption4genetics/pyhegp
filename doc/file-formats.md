@@ -33,7 +33,19 @@ The genotype file is a tab-separated values (TSV) file. The first line MUST be a
 the `reference` column is optional, and should be absent in encrypted genotype files.
 
 Here is an example genotype file.
-`TODO: Add example.`
+```
+chromosome	position	reference	sample1 sample2 sample3 sample4
+chr11	3200246	G	0.4043	0.3655	0.3375	-0.614
+chr11	3205355	T	0.395	0.3545	0.3325	-0.5421
+chr11	3218908	A	0.3977	0.3207	0.3134	-0.4491
+chr11	3414044	A	-0.3616	-0.328	-0.3234	0.074
+chr11	3460427	C	-0.341	-0.3363	-0.3346	0.073
+chr11	3462290	A	-0.3552	-0.3281	-0.3287	0.0912
+chr11	3462323	A	-0.3524	-0.3296	-0.3298	0.0874
+chr11	3462325	T	-0.3533	-0.3291	-0.3294	0.0885
+chr11	3462348	T	-0.361	-0.3244	-0.326	0.0986
+chr11	3464016	A	-0.3461	-0.334	-0.3331	0.08
+```
 
 ## key file
 
