@@ -10,7 +10,21 @@ The data section is a tab-separated table of numbers. The first line MUST be a h
 The `reference` column is optional, and SHOULD be absent in pooled summary files.
 
 Here is an example summary file.
-`TODO: Add example.`
+```
+# pyhegp summary file version 1
+# number-of-samples 100
+chromosome	position	reference	mean	standard-deviation
+chr11	3200246	G	0.1677	0.3915
+chr11	3205355	T	0.1766	0.3599
+chr11	3218908	A	0.1818	0.3169
+chr11	3414044	A	-0.2420	0.1606
+chr11	3460427	C	-0.2408	0.1593
+chr11	3462290	A	-0.2383	0.1670
+chr11	3462323	A	-0.2388	0.1653
+chr11	3462325	T	-0.2386	0.1658
+chr11	3462348	T	-0.2371	0.1702
+chr11	3464016	A	-0.2400	0.1623
+```
 
 ## genotype file
 
