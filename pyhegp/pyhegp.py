@@ -18,6 +18,8 @@
 
 from collections import namedtuple
 from functools import reduce
+from pathlib import Path
+import sys
 
 import click
 import numpy as np
@@ -143,10 +145,7 @@ def pool(pooled_summary_file, summary_files):
               help="Summary statistics file")
 @click.option("--key", "-k", "key_file", type=click.File("w"),
               help="Output key")
-@click.option("--output", "-o", "ciphertext_file", type=click.File("w"),
-              default="-",
-              help="Output ciphertext")
-def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
+def encrypt(genotype_file, summary_file, key_file):
     genotype = read_genotype(genotype_file)
     if summary_file:
         summary = read_summary(summary_file)
@@ -162,7 +161,12 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
     if len(encrypted_genotype) < len(genotype):
         dropped_snps = len(genotype) - len(encrypted_genotype)
         print(f"Dropped {dropped_snps} SNP(s)")
-    write_genotype(ciphertext_file, encrypted_genotype)
+    ciphertext_path = Path(genotype_file.name + ".hegp")
+    if ciphertext_path.exists():
+        print(f"Output file {ciphertext_path} exists, cannot overwrite.")
+        sys.exit(1)
+    with ciphertext_path.open("w") as ciphertext_file:
+        write_genotype(ciphertext_file, encrypted_genotype)
 
 @main.command()
 @click.option("--output", "-o", "output_file",

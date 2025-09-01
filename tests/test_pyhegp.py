@@ -18,6 +18,7 @@
 
 import math
 from pathlib import Path
+import shutil
 
 from click.testing import CliRunner
 from hypothesis import given, settings, strategies as st
@@ -50,11 +51,11 @@ def test_pool_stats(pools):
                                            rel=1e-6))
 
 def test_encrypt(tmp_path):
-    ciphertext = tmp_path / "encrypted-genotype.tsv"
+    shutil.copy("test-data/encrypt-test-genotype.tsv", tmp_path)
+    ciphertext = tmp_path / "encrypt-test-genotype.tsv.hegp"
     result = CliRunner().invoke(main, ["encrypt",
                                        "-s", "test-data/encrypt-test-summary",
-                                       "-o", ciphertext,
-                                       "test-data/encrypt-test-genotype.tsv"])
+                                       str(tmp_path / "encrypt-test-genotype.tsv")])
     assert result.exit_code == 0
     assert ciphertext.exists()
     assert "Dropped 1 SNP(s)" in result.output
@@ -143,20 +144,20 @@ def test_pool(tmp_path):
     assert pooled_summary.n == expected_pooled_summary.n
 
 def test_simple_workflow(tmp_path):
-    ciphertext = tmp_path / "encrypted_genotype.tsv"
+    shutil.copy(f"test-data/genotype.tsv", tmp_path)
+    ciphertext = tmp_path / "genotype.tsv.hegp"
     result = CliRunner().invoke(main,
-                                ["encrypt",
-                                 "-o", ciphertext,
-                                 "test-data/genotype.tsv"])
+                                ["encrypt", str(tmp_path / "genotype.tsv")])
     assert result.exit_code == 0
     assert ciphertext.exists()
 
 def test_joint_workflow(tmp_path):
     runner = CliRunner()
     for i in range(4):
+        shutil.copy(f"test-data/genotype{i}.tsv", tmp_path)
         summary = tmp_path / f"summary{i}"
         result = runner.invoke(
-            main, ["summary", f"test-data/genotype{i}.tsv",
+            main, ["summary", str(tmp_path / f"genotype{i}.tsv"),
                    "-o", summary])
         assert result.exit_code == 0
         assert summary.exists()
@@ -168,18 +169,17 @@ def test_joint_workflow(tmp_path):
     assert result.exit_code == 0
     assert complete_summary.exists()
     for i in range(4):
-        ciphertext = tmp_path / f"encrypted-genotype{i}.tsv"
+        ciphertext = tmp_path / f"genotype{i}.tsv.hegp"
         result = runner.invoke(
             main, ["encrypt",
                    "-s", complete_summary,
-                   "-o", ciphertext,
-                   f"test-data/genotype{i}.tsv"])
+                   str(tmp_path / f"genotype{i}.tsv")])
         assert result.exit_code == 0
         assert ciphertext.exists()
-    complete_ciphertext = tmp_path / "complete-encrypted-genotype.tsv"
+    complete_ciphertext = tmp_path / "complete-genotype.tsv.hegp"
     result = runner.invoke(
         main, ["cat",
                "-o", complete_ciphertext,
-               *(str(tmp_path / f"encrypted-genotype{i}.tsv") for i in range(4))])
+               *(str(tmp_path / f"genotype{i}.tsv.hegp") for i in range(4))])
     assert result.exit_code == 0
     assert complete_ciphertext.exists()

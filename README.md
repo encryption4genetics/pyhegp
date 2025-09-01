@@ -65,9 +65,9 @@ pyhegp --help
 
 In this simple scenario, there is only one data owner and they wish to share their encrypted data with a researcher. The data owner encrypts their data with:
 ```
-pyhegp encrypt -o encrypted-genotype.tsv genotype.tsv
+pyhegp encrypt genotype.tsv
 ```
-They then send the encrypted data to the researcher. Note that data sharing is carried out-of-band and is outside the scope of `pyhegp`.
+They then send the encrypted data `genotype.tsv.hegp` to the researcher. Note that data sharing is carried out-of-band and is outside the scope of `pyhegp`.
 
 ## Joint/federated analysis with many data owners
 
@@ -83,11 +83,11 @@ pyhegp pool -o complete-summary summary1 summary2 ...
 ```
 The data broker shares these summary statistics with the data owners. The data owners standardize their data using these summary statistics, and encrypt their data using a random key.
 ```
-pyhegp encrypt -s complete-summary -o encrypted-genotype.tsv genotype.tsv
+pyhegp encrypt -s complete-summary genotype.tsv
 ```
-Finally, the data owners share the encrypted data with the broker who concatenates it and shares it with all parties.
+Finally, the data owners share the encrypted data `genotype.tsv.hegp` with the broker who concatenates it and shares it with all parties.
 ```
-pyhegp cat -o complete-encrypted-genotype.tsv encrypted-genotype1.tsv encrypted-genotype2.tsv ...
+pyhegp cat -o complete-genotype.tsv.hegp genotype1.tsv.hegp genotype2.tsv.hegp ...
 ```
 Note that all data sharing is carried out-of-band and is outside the scope of `pyhegp`.
 
