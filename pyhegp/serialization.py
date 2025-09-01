@@ -70,7 +70,12 @@ def read_tsv(file):
     return pd.read_csv(file,
                        quoting=csv.QUOTE_NONE,
                        sep="\t",
-                       na_filter=False)
+                       na_filter=False,
+                       # Do not skip blank lines: for example, a data
+                       # frame with only spaces separated by tabs.
+                       # This is valid TSV, even though it is a weird
+                       # data file.
+                       skip_blank_lines=False)
 
 def read_genotype(file):
     df = read_tsv(file)
