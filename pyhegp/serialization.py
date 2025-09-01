@@ -66,8 +66,9 @@ def write_summary(file, summary):
              float_format="%.8g",
              index=False))
 
-def read_tsv(file):
+def read_tsv(file, dtype):
     return pd.read_csv(file,
+                       dtype=dtype,
                        quoting=csv.QUOTE_NONE,
                        sep="\t",
                        na_filter=False,
@@ -78,7 +79,9 @@ def read_tsv(file):
                        skip_blank_lines=False)
 
 def read_genotype(file):
-    df = read_tsv(file)
+    df = read_tsv(file, {"chromosome": "str",
+                         "position": "int",
+                         "reference": "str"})
     sample_columns = [column
                       for column in df.columns
                       if column not in ["chromosome", "position", "reference"]]
@@ -90,7 +93,7 @@ def read_genotype(file):
     return df
 
 def read_phenotype(file):
-    df = read_tsv(file)
+    df = read_tsv(file, {"sample-id": "str"})
     phenotype_columns = [column
                          for column in df.columns
                          if column != "sample-id"]
