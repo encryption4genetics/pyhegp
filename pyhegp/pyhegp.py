@@ -134,7 +134,6 @@ def pool(pooled_summary_file, summary_files):
     max_snps = max(len(summary.data) for summary in summaries)
     if len(pooled_summary.data) < max_snps:
         dropped_snps = max_snps - len(pooled_summary.data)
-        # TODO: Use logging.
         print(f"Dropped {dropped_snps} SNP(s)")
     write_summary(pooled_summary_file, pooled_summary)
 
@@ -162,7 +161,6 @@ def encrypt(genotype_file, summary_file, key_file, ciphertext_file):
     encrypted_genotype = encrypt_genotype(genotype, key, summary)
     if len(encrypted_genotype) < len(genotype):
         dropped_snps = len(genotype) - len(encrypted_genotype)
-        # TODO: Use logging.
         print(f"Dropped {dropped_snps} SNP(s)")
     write_genotype(ciphertext_file, encrypted_genotype)
 
