@@ -66,11 +66,14 @@ def write_summary(file, summary):
              float_format="%.8g",
              index=False))
 
+def read_tsv(file):
+    return pd.read_csv(file,
+                       quoting=csv.QUOTE_NONE,
+                       sep="\t",
+                       na_filter=False)
+
 def read_genotype(file):
-    df = pd.read_csv(file,
-                     quoting=csv.QUOTE_NONE,
-                     sep="\t",
-                     na_filter=False)
+    df = read_tsv(file)
     sample_columns = [column
                       for column in df.columns
                       if column not in ["chromosome", "position", "reference"]]
@@ -81,13 +84,24 @@ def read_genotype(file):
     df[sample_columns] = df[sample_columns].astype("float")
     return df
 
-def write_genotype(file, genotype):
-    (genotype
-     .to_csv(file,
-             quoting=csv.QUOTE_NONE,
-             sep="\t",
-             float_format="%.8g",
-             index=False))
+def read_phenotype(file):
+    df = read_tsv(file)
+    phenotype_columns = [column
+                         for column in df.columns
+                         if column != "sample-id"]
+    df["sample-id"] = df["sample-id"].astype("str")
+    df[phenotype_columns] = df[phenotype_columns].astype("float")
+    return df
+
+def write_tsv(file, df):
+    df.to_csv(file,
+              quoting=csv.QUOTE_NONE,
+              sep="\t",
+              float_format="%.8g",
+              index=False)
+
+write_genotype = write_tsv
+write_phenotype = write_tsv
 
 def read_key(file):
     return np.loadtxt(file, delimiter="\t", ndmin=2)

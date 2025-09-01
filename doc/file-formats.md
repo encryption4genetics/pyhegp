@@ -47,6 +47,27 @@ chr11	3462348	T	-0.361	-0.3244	-0.326	0.0986
 chr11	3464016	A	-0.3461	-0.334	-0.3331	0.08
 ```
 
+## phenotype (and covariates) file
+
+The phenotype file is a tab-separated values (TSV) file. The first line MUST be a header with column labels. Each row corresponds to one individual. The column labelled `sample-id` contains the sample identifier for that individual. Other columns each contain a phenotypical trait for that individual. The headers of these columns MUST be the names of the phenotypes. Column headers are case-sensitive.
+
+Here is an example phenotype file.
+```
+sample-id	sex	start-weight	end-weight	weight-growth-slope	glucose-weight
+A063361614	1	-0.07717	0.04008	0.09186	0.0006918
+A084271874	1	-0.09059	-0.1205	-0.02113	-0.1259
+A048102344	1	-0.08586	-0.04292	0.03724	-0.05113
+A048120064	1	-0.09509	-0.04183	-0.0003283	-0.05509
+A083583043	1	0.06565	0.02807	-0.02835	0.02076
+A063014029	1	-0.1015	-0.113	-0.02167	-0.1116
+A063001812	1	0.1294	0.1109	0.0217	0.1099
+A063873017	1	0.1711	0.1519	0.0116	0.1564
+A066790098	1	0.04236	0.2847	0.1172	0.2834
+A053042270	1	0.1332	0.1758	0.05178	0.2161
+```
+
+Phenotype files may also be used to store covariates.
+
 ## key file
 
 The key file is a tab-separated values (TSV) file with numerical data. There MUST be no column headers.
