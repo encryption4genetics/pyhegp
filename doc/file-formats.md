@@ -30,7 +30,7 @@ chr11	3464016	A	-0.2400	0.1623
 
 The genotype file is a tab-separated values (TSV) file. The first line MUST be a header with column labels. Each row corresponds to one SNP. The columns labelled `chromosome`, `position` and `reference` contain the chromosome, the position on the chromosome and the reference allele for that SNP. Other columns each contain dosage values for one sample. The headers of these columns MUST be their sample identifiers. Column headers are case-sensitive.
 
-the `reference` column is optional, and should be absent in encrypted genotype files.
+The `reference` column is optional, and should be absent in encrypted genotype files.
 
 Here is an example genotype file.
 ```
