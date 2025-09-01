@@ -58,7 +58,7 @@ def test_encrypt(tmp_path):
     assert result.exit_code == 0
     assert ciphertext.exists()
     assert "Dropped 1 SNP(s)" in result.output
-    with open(tmp_path / "encrypted-genotype.tsv", "rb") as genotype_file:
+    with ciphertext.open("rb") as genotype_file:
         encrypted_genotype = read_genotype(genotype_file)
     # TODO: Properly compare encrypted genotype data frame with
     # expected output once it is possible to specify the key.
@@ -134,7 +134,7 @@ def test_pool(tmp_path):
     assert result.exit_code == 0
     assert complete_summary.exists()
     assert "Dropped 2 SNP(s)" in result.output
-    with open(tmp_path / "complete-summary", "rb") as summary_file:
+    with complete_summary.open("rb") as summary_file:
         pooled_summary = read_summary(summary_file)
     with open("test-data/pool-test-complete-summary", "rb") as summary_file:
         expected_pooled_summary = read_summary(summary_file)
