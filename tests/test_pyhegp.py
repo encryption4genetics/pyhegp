@@ -17,6 +17,7 @@
 ### along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
 import math
+from pathlib import Path
 
 from click.testing import CliRunner
 from hypothesis import given, settings, strategies as st
@@ -49,11 +50,13 @@ def test_pool_stats(pools):
                                            rel=1e-6))
 
 def test_encrypt(tmp_path):
+    ciphertext = tmp_path / "encrypted-genotype.tsv"
     result = CliRunner().invoke(main, ["encrypt",
                                        "-s", "test-data/encrypt-test-summary",
-                                       "-o", tmp_path / "encrypted-genotype.tsv",
+                                       "-o", ciphertext,
                                        "test-data/encrypt-test-genotype.tsv"])
     assert result.exit_code == 0
+    assert ciphertext.exists()
     assert "Dropped 1 SNP(s)" in result.output
     with open(tmp_path / "encrypted-genotype.tsv", "rb") as genotype_file:
         encrypted_genotype = read_genotype(genotype_file)
@@ -122,12 +125,14 @@ def test_conservation_of_solutions(genotype, phenotype):
 
 def test_pool(tmp_path):
     columns = ["chromosome", "position", "reference", "mean", "std"]
+    complete_summary = tmp_path / "complete-summary"
     result = CliRunner().invoke(main, ["pool",
-                                       "-o", tmp_path / "complete-summary",
+                                       "-o", complete_summary,
                                        "test-data/pool-test-summary1",
                                        "test-data/pool-test-summary2"],
                                 catch_exceptions=True)
     assert result.exit_code == 0
+    assert complete_summary.exists()
     assert "Dropped 2 SNP(s)" in result.output
     with open(tmp_path / "complete-summary", "rb") as summary_file:
         pooled_summary = read_summary(summary_file)
@@ -137,34 +142,44 @@ def test_pool(tmp_path):
                                   expected_pooled_summary.data)
     assert pooled_summary.n == expected_pooled_summary.n
 
-def test_simple_workflow():
+def test_simple_workflow(tmp_path):
+    ciphertext = tmp_path / "encrypted_genotype.tsv"
     result = CliRunner().invoke(main,
                                 ["encrypt",
-                                 "-o", "encrypted-genotype.tsv",
+                                 "-o", ciphertext,
                                  "test-data/genotype.tsv"])
     assert result.exit_code == 0
+    assert ciphertext.exists()
 
 def test_joint_workflow(tmp_path):
     runner = CliRunner()
     for i in range(4):
+        summary = tmp_path / f"summary{i}"
         result = runner.invoke(
             main, ["summary", f"test-data/genotype{i}.tsv",
-                   "-o", tmp_path / f"summary{i}"])
+                   "-o", summary])
         assert result.exit_code == 0
+        assert summary.exists()
+    complete_summary = tmp_path / "complete-summary"
     result = runner.invoke(
         main, ["pool",
-               "-o", tmp_path / "complete-summary",
+               "-o", complete_summary,
                *(str(tmp_path / f"summary{i}") for i in range(4))])
     assert result.exit_code == 0
+    assert complete_summary.exists()
     for i in range(4):
+        ciphertext = tmp_path / f"encrypted-genotype{i}.tsv"
         result = runner.invoke(
             main, ["encrypt",
-                   "-s", tmp_path / "complete-summary",
-                   "-o", tmp_path / f"encrypted-genotype{i}.tsv",
+                   "-s", complete_summary,
+                   "-o", ciphertext,
                    f"test-data/genotype{i}.tsv"])
         assert result.exit_code == 0
+        assert ciphertext.exists()
+    complete_ciphertext = tmp_path / "complete-encrypted-genotype.tsv"
     result = runner.invoke(
         main, ["cat",
-               "-o", tmp_path / "complete-encrypted-genotype.tsv",
+               "-o", complete_ciphertext,
                *(str(tmp_path / f"encrypted-genotype{i}.tsv") for i in range(4))])
     assert result.exit_code == 0
+    assert complete_ciphertext.exists()
