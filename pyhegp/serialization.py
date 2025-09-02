@@ -95,6 +95,9 @@ def read_genotype(file):
     df[sample_columns] = df[sample_columns].astype("float")
     return df
 
+def is_phenotype_metadata_column(name):
+    return name.lower() == "sample-id"
+
 def read_phenotype(file):
     df = read_tsv(file, {"sample-id": "str"})
     phenotype_columns = [column

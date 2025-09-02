@@ -19,7 +19,7 @@
 from hypothesis import strategies as st
 from hypothesis.extra.pandas import column, columns, data_frames
 
-from pyhegp.serialization import Summary, is_genotype_metadata_column
+from pyhegp.serialization import Summary, is_genotype_metadata_column, is_phenotype_metadata_column
 from pyhegp.utils import negate
 
 tabless_printable_ascii_text = st.text(
@@ -71,11 +71,8 @@ def genotype_frames(draw):
                genotype.columns)),
                                     ignore_index=True)
 
-def phenotype_reserved_column_name_p(name):
-    return name.lower() == "sample-id"
-
 phenotype_names = st.lists(tabless_printable_ascii_text
-                           .filter(negate(phenotype_reserved_column_name_p)),
+                           .filter(negate(is_phenotype_metadata_column)),
                            unique=True)
 
 @st.composite
