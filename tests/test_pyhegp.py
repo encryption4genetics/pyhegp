@@ -22,7 +22,7 @@ from pathlib import Path
 import shutil
 
 from click.testing import CliRunner
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 import pandas as pd
