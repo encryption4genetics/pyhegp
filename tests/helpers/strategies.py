@@ -63,12 +63,16 @@ def summaries(draw):
 
 @st.composite
 def genotype_frames(draw):
-    return draw(data_frames(
+    genotype = draw(data_frames(
         columns=([chromosome_column, position_column]
                  + ([reference_column] if draw(st.booleans()) else [])
                  + columns(draw(sample_names),
                            dtype="float64",
                            elements=st.floats(allow_nan=False)))))
+    return genotype.drop_duplicates(subset=list(
+        filter(genotype_reserved_column_name_p,
+               genotype.columns)),
+                                    ignore_index=True)
 
 def phenotype_reserved_column_name_p(name):
     return name.lower() == "sample-id"
