@@ -111,7 +111,17 @@ def encrypt_genotype(genotype, key, summary):
                      axis="columns")
 
 def cat_genotype(genotypes):
-    return pd.concat(genotypes)
+    match genotypes:
+        # If there are no input data frames, return an empty data
+        # frame with the chromosome and position columns.
+        case []:
+            genotype = pd.DataFrame(data={"chromosome": [],
+                                          "position": []})
+            genotype.chromosome = genotype.chromosome.astype("str")
+            genotype.position = genotype.position.astype("int")
+            return genotype
+        case _:
+            return pd.concat(genotypes)
 
 @click.group()
 def main():
