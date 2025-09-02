@@ -80,10 +80,14 @@ phenotype_names = st.lists(tabless_printable_ascii_text
 
 @st.composite
 def phenotype_frames(draw):
-    return draw(data_frames(
+    phenotype = draw(data_frames(
         columns=([column(name="sample-id",
                          dtype="str",
                          elements=tabless_printable_ascii_text)]
                  + columns(draw(phenotype_names),
                            dtype="float64",
                            elements=st.floats(allow_nan=False)))))
+    return phenotype.drop_duplicates(subset=list(
+        filter(is_phenotype_metadata_column,
+               phenotype.columns)),
+                                     ignore_index=True)
