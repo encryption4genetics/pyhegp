@@ -114,23 +114,23 @@ def encrypt_genotype(genotype, key, summary):
 def main():
     pass
 
-@main.command()
+@main.command("summary")
 @click.argument("genotype-file", type=click.File("r"))
 @click.option("--output", "-o", "summary_file",
               type=click.File("wb"),
               default="-",
               help="output file")
-def summary(genotype_file, summary_file):
+def summary_command(genotype_file, summary_file):
     write_summary(summary_file,
                   genotype_summary(read_genotype(genotype_file)))
 
-@main.command()
+@main.command("pool")
 @click.option("--output", "-o", "pooled_summary_file",
               type=click.File("wb"),
               default="-",
               help="output file")
 @click.argument("summary-files", type=click.File("rb"), nargs=-1)
-def pool(pooled_summary_file, summary_files):
+def pool_command(pooled_summary_file, summary_files):
     summaries = [read_summary(file) for file in summary_files]
     pooled_summary = pool_summaries(summaries)
     max_snps = max(len(summary.data) for summary in summaries)
@@ -139,13 +139,13 @@ def pool(pooled_summary_file, summary_files):
         print(f"Dropped {dropped_snps} SNP(s)")
     write_summary(pooled_summary_file, pooled_summary)
 
-@main.command()
+@main.command("encrypt")
 @click.argument("genotype-file", type=click.File("r"))
 @click.option("--summary", "-s", "summary_file", type=click.File("rb"),
               help="Summary statistics file")
 @click.option("--key", "-k", "key_file", type=click.File("w"),
               help="Output key")
-def encrypt(genotype_file, summary_file, key_file):
+def encrypt_command(genotype_file, summary_file, key_file):
     genotype = read_genotype(genotype_file)
     if summary_file:
         summary = read_summary(summary_file)
@@ -168,13 +168,13 @@ def encrypt(genotype_file, summary_file, key_file):
     with ciphertext_path.open("w") as ciphertext_file:
         write_genotype(ciphertext_file, encrypted_genotype)
 
-@main.command()
+@main.command("cat")
 @click.option("--output", "-o", "output_file",
               type=click.File("wb"),
               default="-",
               help="output file")
 @click.argument("ciphertext-files", type=click.File("rb"), nargs=-1)
-def cat(output_file, ciphertext_files):
+def cat_command(output_file, ciphertext_files):
     write_genotype(output_file,
                    pd.concat([read_genotype(file) for file in ciphertext_files]))
 

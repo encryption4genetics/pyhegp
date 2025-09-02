@@ -50,7 +50,7 @@ def test_pool_stats(pools):
             and pooled_stats.std == approx(np.std(combined_pool, axis=0, ddof=1),
                                            rel=1e-6))
 
-def test_encrypt(tmp_path):
+def test_encrypt_command(tmp_path):
     shutil.copy("test-data/encrypt-test-genotype.tsv", tmp_path)
     ciphertext = tmp_path / "encrypt-test-genotype.tsv.hegp"
     result = CliRunner().invoke(main, ["encrypt",
@@ -124,7 +124,7 @@ def test_conservation_of_solutions(genotype, phenotype):
             == np.linalg.solve(hegp_encrypt(genotype, key),
                                hegp_encrypt(phenotype, key)))
 
-def test_pool(tmp_path):
+def test_pool_command(tmp_path):
     columns = ["chromosome", "position", "reference", "mean", "std"]
     complete_summary = tmp_path / "complete-summary"
     result = CliRunner().invoke(main, ["pool",
