@@ -46,6 +46,15 @@
                         #:select? (or (git-predicate (dirname (current-source-directory)))
                                       (const #t))))
     (build-system pyproject-build-system)
+    (arguments
+     (list #:phases
+           #~(modify-phases %standard-phases
+               ;; When the CI environment variable is set to any
+               ;; value, hypothesis switches to using its built-in CI
+               ;; profile.
+               (add-before 'check 'set-ci-environment
+                 (lambda _
+                   (setenv "CI" "running-on-ci"))))))
     (inputs
      (list python-click
            python-numpy
