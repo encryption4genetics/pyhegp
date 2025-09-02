@@ -187,13 +187,13 @@ def encrypt_command(genotype_file, summary_file, key_file):
     with ciphertext_path.open("w") as ciphertext_file:
         write_genotype(ciphertext_file, encrypted_genotype)
 
-@main.command("cat")
+@main.command("cat-genotype")
 @click.option("--output", "-o", "output_file",
               type=click.File("wb"),
               default="-",
               help="output file")
 @click.argument("ciphertext-files", type=click.File("rb"), nargs=-1)
-def cat_command(output_file, ciphertext_files):
+def cat_genotype_command(output_file, ciphertext_files):
     write_genotype(output_file,
                    cat_genotype([read_genotype(file)
                                  for file in ciphertext_files]))

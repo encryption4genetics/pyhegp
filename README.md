@@ -87,7 +87,7 @@ pyhegp encrypt -s complete-summary genotype.tsv
 ```
 Finally, the data owners share the encrypted data `genotype.tsv.hegp` with the broker who concatenates it and shares it with all parties.
 ```
-pyhegp cat -o complete-genotype.tsv.hegp genotype1.tsv.hegp genotype2.tsv.hegp ...
+pyhegp cat-genotype -o complete-genotype.tsv.hegp genotype1.tsv.hegp genotype2.tsv.hegp ...
 ```
 Note that all data sharing is carried out-of-band and is outside the scope of `pyhegp`.
 

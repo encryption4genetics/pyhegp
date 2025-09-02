@@ -221,7 +221,7 @@ def test_joint_workflow(tmp_path):
         assert ciphertext.exists()
     complete_ciphertext = tmp_path / "complete-genotype.tsv.hegp"
     result = runner.invoke(
-        main, ["cat",
+        main, ["cat-genotype",
                "-o", complete_ciphertext,
                *(str(tmp_path / f"genotype{i}.tsv.hegp") for i in range(4))])
     assert result.exit_code == 0
