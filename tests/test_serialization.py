@@ -20,41 +20,12 @@ import tempfile
 
 from hypothesis import given, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
-from hypothesis.extra.pandas import column, columns, data_frames
 import pandas as pd
 from pytest import approx
 
-from pyhegp.serialization import Summary, read_summary, write_summary, read_summary_headers, read_genotype, write_genotype, read_phenotype, write_phenotype, read_key, write_key
-from pyhegp.utils import negate
+from pyhegp.serialization import read_summary, write_summary, read_summary_headers, read_genotype, write_genotype, read_phenotype, write_phenotype, read_key, write_key
 
-tabless_printable_ascii_text = st.text(
-    # Exclude control characters and tab.
-    st.characters(codec="ascii",
-                  exclude_categories=("Cc",),
-                  exclude_characters=("\t",)),
-    min_size=1)
-chromosome_column = column(name="chromosome",
-                           dtype="str",
-                           elements=tabless_printable_ascii_text)
-position_column = column(name="position",
-                         dtype="int")
-reference_column = column(name="reference",
-                          dtype="str",
-                          elements=st.text(
-                              st.characters(codec="ascii",
-                                            categories=(),
-                                            include_characters=("A", "G", "C", "T")),
-                              min_size=1))
-
-@st.composite
-def summaries(draw):
-    return Summary(draw(st.integers()),
-                   draw(data_frames(
-                       columns=([chromosome_column, position_column]
-                                + ([reference_column] if draw(st.booleans()) else [])
-                                + columns(["mean", "std"],
-                                          dtype="float64",
-                                          elements=st.floats(allow_nan=False))))))
+from helpers.strategies import *
 
 @given(summaries())
 def test_read_write_summary_are_inverses(summary):
@@ -95,45 +66,12 @@ def test_read_summary_headers_variable_whitespace(properties_and_whitespace):
         file.seek(0)
         assert properties == read_summary_headers(file)
 
-def genotype_reserved_column_name_p(name):
-    return name.lower() in {"chromosome", "position", "reference"}
-
-sample_names = st.lists(tabless_printable_ascii_text
-                        .filter(negate(genotype_reserved_column_name_p)),
-                        unique=True)
-
-@st.composite
-def genotype_frames(draw):
-    return draw(data_frames(
-        columns=([chromosome_column, position_column]
-                 + ([reference_column] if draw(st.booleans()) else [])
-                 + columns(draw(sample_names),
-                           dtype="float64",
-                           elements=st.floats(allow_nan=False)))))
-
 @given(genotype_frames())
 def test_read_write_genotype_are_inverses(genotype):
     with tempfile.TemporaryFile() as file:
         write_genotype(file, genotype)
         file.seek(0)
         pd.testing.assert_frame_equal(genotype, read_genotype(file))
-
-def phenotype_reserved_column_name_p(name):
-    return name.lower() == "sample-id"
-
-phenotype_names = st.lists(tabless_printable_ascii_text
-                           .filter(negate(phenotype_reserved_column_name_p)),
-                           unique=True)
-
-@st.composite
-def phenotype_frames(draw):
-    return draw(data_frames(
-        columns=([column(name="sample-id",
-                         dtype="str",
-                         elements=tabless_printable_ascii_text)]
-                 + columns(draw(phenotype_names),
-                           dtype="float64",
-                           elements=st.floats(allow_nan=False)))))
 
 @given(phenotype_frames())
 def test_read_write_phenotype_are_inverses(phenotype):
