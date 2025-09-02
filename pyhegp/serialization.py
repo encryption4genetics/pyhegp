@@ -78,13 +78,16 @@ def read_tsv(file, dtype):
                        # data file.
                        skip_blank_lines=False)
 
+def is_genotype_metadata_column(name):
+    return name.lower() in {"chromosome", "position", "reference"}
+
 def read_genotype(file):
     df = read_tsv(file, {"chromosome": "str",
                          "position": "int",
                          "reference": "str"})
     sample_columns = [column
                       for column in df.columns
-                      if column not in ["chromosome", "position", "reference"]]
+                      if not is_genotype_metadata_column(column)]
     df.chromosome = df.chromosome.astype("str")
     df.position = df.position.astype("int")
     if "reference" in df:

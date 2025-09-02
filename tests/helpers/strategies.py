@@ -19,7 +19,7 @@
 from hypothesis import strategies as st
 from hypothesis.extra.pandas import column, columns, data_frames
 
-from pyhegp.serialization import Summary
+from pyhegp.serialization import Summary, is_genotype_metadata_column
 from pyhegp.utils import negate
 
 tabless_printable_ascii_text = st.text(
@@ -44,11 +44,8 @@ reference_column = column(name="reference",
                                             include_characters=("A", "G", "C", "T")),
                               min_size=1))
 
-def genotype_reserved_column_name_p(name):
-    return name.lower() in {"chromosome", "position", "reference"}
-
 sample_names = st.lists(tabless_printable_ascii_text
-                        .filter(negate(genotype_reserved_column_name_p)),
+                        .filter(negate(is_genotype_metadata_column)),
                         unique=True)
 
 @st.composite
@@ -70,7 +67,7 @@ def genotype_frames(draw):
                            dtype="float64",
                            elements=st.floats(allow_nan=False)))))
     return genotype.drop_duplicates(subset=list(
-        filter(genotype_reserved_column_name_p,
+        filter(is_genotype_metadata_column,
                genotype.columns)),
                                     ignore_index=True)
 
