@@ -164,60 +164,32 @@ def split_data_frame(draw, df, metadata_columns):
 @st.composite
 def catenable_genotype_frames(draw):
     genotype = draw(genotype_frames())
-    return split_data_frame(draw,
-                            genotype,
-                            list(filter(is_genotype_metadata_column,
-                                        genotype.columns)))
+    return ([genotype]
+            + split_data_frame(draw,
+                               genotype,
+                               list(filter(is_genotype_metadata_column,
+                                           genotype.columns))))
 
 @given(catenable_genotype_frames())
 def test_cat_genotype(genotypes):
-    def metadata_columns(genotype):
-        return list(filter(is_genotype_metadata_column,
-                           genotype.columns))
-    def sample_columns(genotype):
-        return list(filter(negate(is_genotype_metadata_column),
-                           genotype.columns))
-
-    complete_genotype = cat_genotype(genotypes)
-    # Assert that the result has the correct shape.
-    assert (complete_genotype.shape
-            == (genotypes[0].shape[0],
-                sum(len(sample_columns(genotype)) for genotype in genotypes)
-                + len(metadata_columns(genotypes[0]))))
-    # Assert that the result has samples from all data frames.
-    assert (sample_columns(complete_genotype)
-            == [column
-                for genotype in genotypes
-                for column in sample_columns(genotype)])
+    complete_genotype, *split_genotypes = genotypes
+    pd.testing.assert_frame_equal(complete_genotype,
+                                  cat_genotype(split_genotypes))
 
 @st.composite
 def catenable_phenotype_frames(draw):
     phenotype = draw(phenotype_frames())
-    return split_data_frame(draw,
-                            phenotype,
-                            list(filter(is_phenotype_metadata_column,
-                                        phenotype.columns)))
+    return ([phenotype]
+            + split_data_frame(draw,
+                               phenotype,
+                               list(filter(is_phenotype_metadata_column,
+                                           phenotype.columns))))
 
 @given(catenable_phenotype_frames())
 def test_cat_phenotype(phenotypes):
-    def metadata_columns(phenotype):
-        return list(filter(is_phenotype_metadata_column,
-                           phenotype.columns))
-    def sample_columns(phenotype):
-        return list(filter(negate(is_phenotype_metadata_column),
-                           phenotype.columns))
-
-    complete_phenotype = cat_phenotype(phenotypes)
-    # Assert that the result has the correct shape.
-    assert (complete_phenotype.shape
-            == (phenotypes[0].shape[0],
-                sum(len(sample_columns(phenotype)) for phenotype in phenotypes)
-                + len(metadata_columns(phenotypes[0]))))
-    # Assert that the result has samples from all data frames.
-    assert (sample_columns(complete_phenotype)
-            == [column
-                for phenotype in phenotypes
-                for column in sample_columns(phenotype)])
+    complete_phenotype, *split_phenotypes = phenotypes
+    pd.testing.assert_frame_equal(complete_phenotype,
+                                  cat_phenotype(split_phenotypes))
 
 def test_simple_workflow(tmp_path):
     shutil.copy(f"test-data/genotype.tsv", tmp_path)
