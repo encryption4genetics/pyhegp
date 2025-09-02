@@ -26,7 +26,6 @@ from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 import pandas as pd
-import pytest
 from pytest import approx
 
 from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize, cat_genotype
@@ -166,7 +165,6 @@ def catenable_genotype_frames(draw):
             for start, end
             in pairwise([0] + split_points + [len(sample_names)])]
 
-@pytest.mark.xfail
 @given(catenable_genotype_frames())
 def test_cat_genotype(genotypes):
     def metadata_columns(genotype):

@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import special_ortho_group
 
-from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, write_genotype, write_key
+from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, write_genotype, write_key, is_genotype_metadata_column
 
 Stats = namedtuple("Stats", "n mean std")
 
@@ -111,6 +111,12 @@ def encrypt_genotype(genotype, key, summary):
                      axis="columns")
 
 def cat_genotype(genotypes):
+    def cat2(genotype1, genotype2):
+        return pd.merge(genotype1, genotype2,
+                        how="inner",
+                        on=list(filter(is_genotype_metadata_column,
+                                       genotype1.columns)))
+
     match genotypes:
         # If there are no input data frames, return an empty data
         # frame with the chromosome and position columns.
@@ -121,7 +127,7 @@ def cat_genotype(genotypes):
             genotype.position = genotype.position.astype("int")
             return genotype
         case _:
-            return pd.concat(genotypes)
+            return reduce(cat2, genotypes)
 
 @click.group()
 def main():
