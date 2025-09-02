@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import special_ortho_group
 
-from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, write_genotype, write_key, is_genotype_metadata_column
+from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, read_phenotype, write_genotype, write_phenotype, write_key, is_genotype_metadata_column
 
 Stats = namedtuple("Stats", "n mean std")
 
@@ -110,13 +110,12 @@ def encrypt_genotype(genotype, key, summary):
                                    columns=sample_names)),
                      axis="columns")
 
-def cat_genotype(genotypes):
-    def cat2(genotype1, genotype2):
-        return pd.merge(genotype1, genotype2,
-                        how="inner",
-                        on=list(filter(is_genotype_metadata_column,
-                                       genotype1.columns)))
+def cat_data_frames(frames, metadata_columns):
+    def cat2(df1, df2):
+        return pd.merge(df1, df2, how="inner", on=metadata_columns)
+    return reduce(cat2, frames)
 
+def cat_genotype(genotypes):
     match genotypes:
         # If there are no input data frames, return an empty data
         # frame with the chromosome and position columns.
@@ -127,7 +126,19 @@ def cat_genotype(genotypes):
             genotype.position = genotype.position.astype("int")
             return genotype
         case _:
-            return reduce(cat2, genotypes)
+            return cat_data_frames(genotypes,
+                                   list(filter(is_genotype_metadata_column,
+                                               genotypes[0].columns)))
+
+def cat_phenotype(phenotypes):
+    match phenotypes:
+        # If there are no input data frames, return an empty data
+        # frame with the sample-id column.
+        case []:
+            return pd.DataFrame(data={"sample-id": []},
+                                dtype="str")
+        case _:
+            return cat_data_frames(phenotypes, ["sample-id"])
 
 @click.group()
 def main():
@@ -197,6 +208,17 @@ def cat_genotype_command(output_file, ciphertext_files):
     write_genotype(output_file,
                    cat_genotype([read_genotype(file)
                                  for file in ciphertext_files]))
+
+@main.command("cat-phenotype")
+@click.option("--output", "-o", "output_file",
+              type=click.File("wb"),
+              default="-",
+              help="output file")
+@click.argument("ciphertext-files", type=click.File("rb"), nargs=-1)
+def cat_phenotype_command(output_file, ciphertext_files):
+    write_phenotype(output_file,
+                    cat_phenotype([read_phenotype(file)
+                                   for file in ciphertext_files]))
 
 if __name__ == "__main__":
     main()
