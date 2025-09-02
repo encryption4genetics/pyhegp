@@ -110,6 +110,9 @@ def encrypt_genotype(genotype, key, summary):
                                    columns=sample_names)),
                      axis="columns")
 
+def cat_genotype(genotypes):
+    return pd.concat(genotypes)
+
 @click.group()
 def main():
     pass
@@ -176,7 +179,8 @@ def encrypt_command(genotype_file, summary_file, key_file):
 @click.argument("ciphertext-files", type=click.File("rb"), nargs=-1)
 def cat_command(output_file, ciphertext_files):
     write_genotype(output_file,
-                   pd.concat([read_genotype(file) for file in ciphertext_files]))
+                   cat_genotype([read_genotype(file)
+                                 for file in ciphertext_files]))
 
 if __name__ == "__main__":
     main()
