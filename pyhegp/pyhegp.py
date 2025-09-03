@@ -110,6 +110,15 @@ def encrypt_genotype(genotype, key, summary):
                                    columns=sample_names)),
                      axis="columns")
 
+def encrypt_phenotype(phenotype, key):
+    phenotype_matrix = phenotype.drop(columns=["sample-id"])
+    sample_names = phenotype_matrix.columns
+    return pd.concat((phenotype["sample-id"],
+                      pd.DataFrame(hegp_encrypt(phenotype_matrix.to_numpy(),
+                                                key),
+                                   columns=sample_names)),
+                     axis="columns")
+
 def cat_data_frames(frames, metadata_columns):
     def cat2(df1, df2):
         return pd.merge(df1, df2, how="inner", on=metadata_columns)
@@ -171,11 +180,20 @@ def pool_command(pooled_summary_file, summary_files):
 
 @main.command("encrypt")
 @click.argument("genotype-file", type=click.File("r"))
+@click.argument("phenotype-file", type=click.File("r"), required=False)
 @click.option("--summary", "-s", "summary_file", type=click.File("rb"),
               help="Summary statistics file")
 @click.option("--key", "-k", "key_file", type=click.File("w"),
               help="Output key")
-def encrypt_command(genotype_file, summary_file, key_file):
+def encrypt_command(genotype_file, phenotype_file, summary_file, key_file):
+    def write_ciphertext(plaintext_path, writer):
+        ciphertext_path = Path(plaintext_path + ".hegp")
+        if ciphertext_path.exists():
+            print(f"Output file {ciphertext_path} exists, cannot overwrite.")
+            sys.exit(1)
+        with ciphertext_path.open("w") as ciphertext_file:
+            writer(ciphertext_file)
+
     genotype = read_genotype(genotype_file)
     if summary_file:
         summary = read_summary(summary_file)
@@ -187,16 +205,20 @@ def encrypt_command(genotype_file, summary_file, key_file):
                          .columns))
     if key_file:
         write_key(key_file, key)
+
     encrypted_genotype = encrypt_genotype(genotype, key, summary)
     if len(encrypted_genotype) < len(genotype):
         dropped_snps = len(genotype) - len(encrypted_genotype)
         print(f"Dropped {dropped_snps} SNP(s)")
-    ciphertext_path = Path(genotype_file.name + ".hegp")
-    if ciphertext_path.exists():
-        print(f"Output file {ciphertext_path} exists, cannot overwrite.")
-        sys.exit(1)
-    with ciphertext_path.open("w") as ciphertext_file:
-        write_genotype(ciphertext_file, encrypted_genotype)
+    write_ciphertext(genotype_file.name,
+                     lambda file: write_genotype(file, encrypted_genotype))
+
+    if phenotype_file:
+        write_ciphertext(phenotype_file.name,
+                         lambda file:
+                         write_phenotype(file, encrypt_phenotype(
+                             read_phenotype(phenotype_file),
+                             key)))
 
 @main.command("cat-genotype")
 @click.option("--output", "-o", "output_file",
