@@ -45,9 +45,8 @@ reference_column = column(name="reference",
                                             include_characters=("A", "G", "C", "T")),
                               min_size=1))
 
-sample_names = st.lists(tabless_printable_ascii_text
-                        .filter(negate(is_genotype_metadata_column)),
-                        unique=True)
+sample_names = (tabless_printable_ascii_text
+                .filter(negate(is_genotype_metadata_column)))
 
 @st.composite
 def summaries(draw):
@@ -61,12 +60,19 @@ def summaries(draw):
 
 @st.composite
 def genotype_frames(draw,
+                    number_of_samples=st.integers(min_value=0,
+                                                  max_value=10),
                     reference_present=st.booleans()):
+    _number_of_samples = draw(number_of_samples)
     genotype = draw(data_frames(
         columns=([chromosome_column, position_column]
                  + ([reference_column]
                     if draw(reference_present)
                     else [])
+                 + columns(draw(st.lists(sample_names,
+                                         min_size=_number_of_samples,
+                                         max_size=_number_of_samples,
+                                         unique=True)),
                            dtype="float64",
                            elements=st.floats(allow_nan=False)))))
     return genotype.drop_duplicates(subset=list(
