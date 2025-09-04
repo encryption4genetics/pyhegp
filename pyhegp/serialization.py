@@ -108,6 +108,8 @@ def read_phenotype(file):
     return df
 
 def write_tsv(file, df):
+    if df.isna().any(axis=None):
+        raise ValueError("Data frame has NA values")
     df.to_csv(file,
               quoting=csv.QUOTE_NONE,
               sep="\t",
