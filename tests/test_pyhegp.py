@@ -26,9 +26,9 @@ from hypothesis import given, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 import pandas as pd
-from pytest import approx
+from pytest import approx, mark
 
-from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize, cat_genotype, cat_phenotype
+from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize, genotype_summary, encrypt_genotype, encrypt_phenotype, cat_genotype, cat_phenotype
 from pyhegp.serialization import Summary, read_summary, read_genotype, is_genotype_metadata_column, is_phenotype_metadata_column
 from pyhegp.utils import negate
 
@@ -125,6 +125,24 @@ def test_conservation_of_solutions(genotype, phenotype):
                    abs=1e-6, rel=1e-6)
             == np.linalg.solve(hegp_encrypt(genotype, key),
                                hegp_encrypt(phenotype, key)))
+
+@mark.xfail
+@given(genotype_frames(st.shared(st.integers(min_value=2, max_value=10),
+                                 key="number-of-samples"),
+                       reference_present=st.just(True)),
+       keys(st.shared(st.integers(min_value=2, max_value=10),
+                      key="number-of-samples")))
+def test_encrypt_genotype_does_not_produce_na(genotype, key):
+    assert not encrypt_genotype(genotype,
+                                key,
+                                genotype_summary(genotype)).isna().any(axis=None)
+
+@given(phenotype_frames(st.shared(st.integers(min_value=2, max_value=10),
+                                  key="number-of-samples")),
+       keys(st.shared(st.integers(min_value=2, max_value=10),
+                      key="number-of-samples")))
+def test_encrypt_phenotype_does_not_produce_na(phenotype, key):
+    assert not encrypt_phenotype(phenotype, key).isna().any(axis=None)
 
 def test_pool_command(tmp_path):
     columns = ["chromosome", "position", "reference", "mean", "std"]
