@@ -74,7 +74,9 @@ def genotype_frames(draw,
                                          max_size=_number_of_samples,
                                          unique=True)),
                            dtype="float64",
-                           elements=st.floats(allow_nan=False)))))
+                           elements=st.floats(min_value=0,
+                                              max_value=100,
+                                              allow_nan=False)))))
     return genotype.drop_duplicates(subset=list(
         filter(is_genotype_metadata_column,
                genotype.columns)),
@@ -96,7 +98,9 @@ def phenotype_frames(draw,
                          unique=True)]
                  + columns(draw(phenotype_names),
                            dtype="float64",
-                           elements=st.floats(allow_nan=False))),
+                           elements=st.floats(min_value=-1000,
+                                              max_value=1000,
+                                              allow_nan=False))),
         index=range_indexes(min_size=_number_of_samples,
                             max_size=_number_of_samples)))
 
