@@ -18,6 +18,7 @@
 
 from hypothesis import strategies as st
 from hypothesis.extra.pandas import column, columns, data_frames
+from scipy.stats import special_ortho_group
 
 from pyhegp.serialization import Summary, is_genotype_metadata_column, is_phenotype_metadata_column
 from pyhegp.utils import negate
@@ -88,3 +89,10 @@ def phenotype_frames(draw):
         filter(is_phenotype_metadata_column,
                phenotype.columns)),
                                      ignore_index=True)
+
+@st.composite
+def keys(draw, size):
+    return (special_ortho_group(draw(size),
+                                seed=draw(st.integers(min_value=0,
+                                                      max_value=2**32-1)))
+            .rvs())

@@ -80,8 +80,7 @@ def test_read_write_phenotype_are_inverses(phenotype):
         file.seek(0)
         pd.testing.assert_frame_equal(phenotype, read_phenotype(file))
 
-@given(arrays("float64",
-              array_shapes(min_dims=2, max_dims=2)))
+@given(keys(st.integers(min_value=2, max_value=10)))
 def test_read_write_key_are_inverses(key):
     with tempfile.TemporaryFile() as file:
         write_key(file, key)
