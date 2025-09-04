@@ -32,7 +32,7 @@ from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, p
 from pyhegp.serialization import Summary, read_summary, read_genotype, is_genotype_metadata_column, is_phenotype_metadata_column
 from pyhegp.utils import negate
 
-from helpers.strategies import *
+from helpers.strategies import genotype_frames, phenotype_frames, keys
 
 @given(st.lists(st.lists(arrays("float64",
                                 st.shared(array_shapes(min_dims=1, max_dims=1),

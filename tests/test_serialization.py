@@ -25,7 +25,7 @@ from pytest import approx
 
 from pyhegp.serialization import read_summary, write_summary, read_summary_headers, read_genotype, write_genotype, read_phenotype, write_phenotype, read_key, write_key
 
-from helpers.strategies import *
+from helpers.strategies import summaries, genotype_frames, phenotype_frames, keys
 
 @given(summaries())
 def test_read_write_summary_are_inverses(summary):
