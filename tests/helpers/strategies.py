@@ -60,11 +60,13 @@ def summaries(draw):
                                           elements=st.floats(allow_nan=False))))))
 
 @st.composite
-def genotype_frames(draw):
+def genotype_frames(draw,
+                    reference_present=st.booleans()):
     genotype = draw(data_frames(
         columns=([chromosome_column, position_column]
-                 + ([reference_column] if draw(st.booleans()) else [])
-                 + columns(draw(sample_names),
+                 + ([reference_column]
+                    if draw(reference_present)
+                    else [])
                            dtype="float64",
                            elements=st.floats(allow_nan=False)))))
     return genotype.drop_duplicates(subset=list(
