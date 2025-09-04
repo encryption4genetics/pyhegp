@@ -185,10 +185,12 @@ def pool_command(pooled_summary_file, summary_files):
               help="Summary statistics file")
 @click.option("--key", "-k", "key_file", type=click.File("w"),
               help="Output key")
-def encrypt_command(genotype_file, phenotype_file, summary_file, key_file):
+@click.option("--force", "-f", is_flag=True,
+              help="Overwrite output files even if they exist")
+def encrypt_command(genotype_file, phenotype_file, summary_file, key_file, force):
     def write_ciphertext(plaintext_path, writer):
         ciphertext_path = Path(plaintext_path + ".hegp")
-        if ciphertext_path.exists():
+        if ciphertext_path.exists() and not force:
             print(f"Output file {ciphertext_path} exists, cannot overwrite.")
             sys.exit(1)
         with ciphertext_path.open("w") as ciphertext_file:
