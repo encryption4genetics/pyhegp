@@ -17,7 +17,7 @@
 ### along with pyhegp. If not, see <https://www.gnu.org/licenses/>.
 
 from hypothesis import strategies as st
-from hypothesis.extra.pandas import column, columns, data_frames
+from hypothesis.extra.pandas import column, columns, data_frames, range_indexes
 from scipy.stats import special_ortho_group
 
 from pyhegp.serialization import Summary, is_genotype_metadata_column, is_phenotype_metadata_column
@@ -85,18 +85,20 @@ phenotype_names = st.lists(tabless_printable_ascii_text
                            unique=True)
 
 @st.composite
-def phenotype_frames(draw):
-    phenotype = draw(data_frames(
+def phenotype_frames(draw,
+                     number_of_samples=st.integers(min_value=0,
+                                                   max_value=10)):
+    _number_of_samples = draw(number_of_samples)
+    return draw(data_frames(
         columns=([column(name="sample-id",
                          dtype="str",
-                         elements=tabless_printable_ascii_text)]
+                         elements=tabless_printable_ascii_text,
+                         unique=True)]
                  + columns(draw(phenotype_names),
                            dtype="float64",
-                           elements=st.floats(allow_nan=False)))))
-    return phenotype.drop_duplicates(subset=list(
-        filter(is_phenotype_metadata_column,
-               phenotype.columns)),
-                                     ignore_index=True)
+                           elements=st.floats(allow_nan=False))),
+        index=range_indexes(min_size=_number_of_samples,
+                            max_size=_number_of_samples)))
 
 @st.composite
 def keys(draw, size):
