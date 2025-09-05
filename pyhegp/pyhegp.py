@@ -93,6 +93,11 @@ def pool_summaries(summaries):
                    pooled_summary.data.drop(columns=["reference"]))
 
 def encrypt_genotype(genotype, key, summary):
+    # Drop SNPs that have a zero standard deviation. Such SNPs have no
+    # discriminatory power in the analysis and mess with our
+    # standardization by causing a division by zero.
+    summary = summary._replace(
+        data=summary.data[~np.isclose(summary.data["std"], 0)])
     # Drop any SNPs that are not in both genotype and summary.
     common_genotype = pd.merge(genotype,
                                summary.data[["chromosome", "position"]],
