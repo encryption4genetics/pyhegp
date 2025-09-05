@@ -93,7 +93,7 @@ def pool_summaries(summaries):
                    pooled_summary.data.drop(columns=["reference"]))
 
 def encrypt_genotype(genotype, key, summary):
-    # Drop any SNPs tha are not in both genotype and summary.
+    # Drop any SNPs that are not in both genotype and summary.
     common_genotype = pd.merge(genotype,
                                summary.data[["chromosome", "position"]],
                                on=("chromosome", "position"))
