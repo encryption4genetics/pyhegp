@@ -49,7 +49,7 @@
 (define-public r-mixed-model-gwas
   (package
    (name "r-mixed-model-gwas")
-   (version "1.3")
+   (version "1.3.1")
    (source (origin
             (method git-fetch)
             (uri (git-reference
@@ -58,7 +58,7 @@
             (file-name (git-file-name name version))
             (sha256
              (base32
-              "0yv86mw9m981vzl80j100lg05kc6jm5ijhq9b8zcd8f2lr3115db"))))
+              "0vll55v8wjc0179n5q9ch9ah3dvgymc374wlbz33yzyi35yr8ds2"))))
    (build-system r-build-system)
    (home-page "https://github.com/encryption4genetics/mixed-model-gwas")
    (synopsis "R mixed model GWAS")
