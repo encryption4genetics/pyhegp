@@ -134,11 +134,8 @@ def cat_genotype(genotypes):
         # If there are no input data frames, return an empty data
         # frame with the chromosome and position columns.
         case []:
-            genotype = pd.DataFrame(data={"chromosome": [],
-                                          "position": []})
-            genotype.chromosome = genotype.chromosome.astype("str")
-            genotype.position = genotype.position.astype("int")
-            return genotype
+            return pd.DataFrame({"chromosome": pd.Series(dtype="str"),
+                                 "position": pd.Series(dtype="int")})
         case _:
             return reduce(cat2, genotypes)
 
