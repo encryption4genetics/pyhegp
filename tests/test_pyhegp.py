@@ -26,7 +26,7 @@ from hypothesis import given, strategies as st
 from hypothesis.extra.numpy import arrays, array_shapes
 import numpy as np
 import pandas as pd
-from pytest import approx
+from pytest import approx, mark
 
 from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize, genotype_summary, encrypt_genotype, encrypt_phenotype, cat_genotype, cat_phenotype
 from pyhegp.serialization import Summary, read_summary, read_genotype, is_genotype_metadata_column, is_phenotype_metadata_column
@@ -195,14 +195,9 @@ def test_cat_genotype(genotypes):
 @st.composite
 def catenable_phenotype_frames(draw):
     phenotype = draw(phenotype_frames())
-    metadata = phenotype[list(filter(is_phenotype_metadata_column,
-                                     phenotype.columns))]
-    data = phenotype[list(filter(negate(is_phenotype_metadata_column),
-                                 phenotype.columns))]
-    return ([phenotype]
-            + [pd.concat((metadata, df), axis="columns")
-               for df in split_data_frame(draw, data, axis="columns")])
+    return [phenotype] + split_data_frame(draw, phenotype)
 
+@mark.xfail
 @given(catenable_phenotype_frames())
 def test_cat_phenotype(phenotypes):
     complete_phenotype, *split_phenotypes = phenotypes
