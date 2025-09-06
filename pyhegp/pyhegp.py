@@ -124,12 +124,12 @@ def encrypt_phenotype(phenotype, key):
                                    columns=sample_names)),
                      axis="columns")
 
-def cat_data_frames(frames, metadata_columns):
-    def cat2(df1, df2):
-        return pd.merge(df1, df2, how="inner", on=metadata_columns)
-    return reduce(cat2, frames)
-
 def cat_genotype(genotypes):
+    def cat2(df1, df2):
+        return pd.merge(df1, df2,
+                        how="inner",
+                        on=list(filter(is_genotype_metadata_column,
+                                       df1.columns)))
     match genotypes:
         # If there are no input data frames, return an empty data
         # frame with the chromosome and position columns.
@@ -140,9 +140,7 @@ def cat_genotype(genotypes):
             genotype.position = genotype.position.astype("int")
             return genotype
         case _:
-            return cat_data_frames(genotypes,
-                                   list(filter(is_genotype_metadata_column,
-                                               genotypes[0].columns)))
+            return reduce(cat2, genotypes)
 
 def cat_phenotype(phenotypes):
     match phenotypes:
