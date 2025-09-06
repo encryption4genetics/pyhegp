@@ -152,7 +152,7 @@ def cat_phenotype(phenotypes):
             return pd.DataFrame(data={"sample-id": []},
                                 dtype="str")
         case _:
-            return cat_data_frames(phenotypes, ["sample-id"])
+            return pd.concat(phenotypes)
 
 @click.group()
 def main():
