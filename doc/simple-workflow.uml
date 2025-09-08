@@ -1,4 +1,4 @@
-@startuml
+@startuml simple-workflow
 actor "Researcher" as researcher
 actor "Data Owner" as owner
 note over owner: pyhegp encrypt

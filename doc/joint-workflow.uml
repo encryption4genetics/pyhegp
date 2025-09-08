@@ -1,4 +1,4 @@
-@startuml
+@startuml joint-workflow
 actor "Data Broker" as broker
 actor "Data Owner 1" as owner1
 actor "Data Owner 2" as owner2
