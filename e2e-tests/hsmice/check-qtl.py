@@ -23,5 +23,7 @@ import pandas as pd
 if __name__ == "__main__":
     df = pd.read_csv(sys.argv[1], sep="\t")
     qtl = df.query("p < 1e-10")
+    # Assert that the QTL is on chromosome 4.
     assert (qtl.chromosome == 4).all()
+    # Assert that the QTL is within 2 Mb of the expected position.
     assert ((qtl.position - 137715608).abs() < 2*10**6).all()
