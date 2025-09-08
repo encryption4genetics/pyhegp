@@ -1,3 +1,5 @@
+@startuml
 actor "Researcher" as researcher
 actor "Data Owner" as owner
 owner -> researcher: Encrypt and share ciphertext
+@enduml
