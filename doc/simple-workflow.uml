@@ -1,5 +1,6 @@
 @startuml
 actor "Researcher" as researcher
 actor "Data Owner" as owner
-owner -> researcher: Encrypt and share ciphertext
+note over owner: pyhegp encrypt
+owner -> researcher: Send ciphertext
 @enduml

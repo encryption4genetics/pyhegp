@@ -3,16 +3,25 @@ actor "Data Broker" as broker
 actor "Data Owner 1" as owner1
 actor "Data Owner 2" as owner2
 actor "Data Owner 3" as owner3
+note over owner1: pyhegp summary
+/ note over owner2: pyhegp summary
+/ note over owner3: pyhegp summary
 owner1 -> broker: Send summary statistics
 owner2 -> broker: Send summary statistics
 owner3 -> broker: Send summary statistics
+note over broker: pyhegp pool
 broker --> owner1: Send pooled statistics
 broker --> owner2: Send pooled statistics
 broker --> owner3: Send pooled statistics
-owner1 -> broker: Encrypt and share ciphertext
-owner2 -> broker: Encrypt and share ciphertext
-owner3 -> broker: Encrypt and share ciphertext
-broker -> owner1: Share concatenated ciphertext
-broker -> owner2: Share concatenated ciphertext
-broker -> owner3: Share concatenated ciphertext
+note over owner1: pyhegp encrypt
+/ note over owner2: pyhegp encrypt
+/ note over owner3: pyhegp encrypt
+owner1 -> broker: Send ciphertext
+owner2 -> broker: Send ciphertext
+owner3 -> broker: Send ciphertext
+note over broker: pyhegp cat-genotype
+note over broker: pyhegp cat-phenotype
+broker -> owner1: Send concatenated ciphertext
+broker -> owner2: Send concatenated ciphertext
+broker -> owner3: Send concatenated ciphertext
 @enduml
