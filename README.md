@@ -77,11 +77,11 @@ Data owners generate summary statistics for their data.
 ```
 pyhegp summary genotype.tsv -o summary
 ```
-They share this with the data broker who pools it to compute the summary statistics of the complete dataset.
+They share this with the data broker who pools it to compute the summary statistics of the complete dataset. Any SNPs not common to all summaries will be dropped.
 ```
 pyhegp pool -o complete-summary summary1 summary2 ...
 ```
-The data broker shares these summary statistics with the data owners. The data owners standardize their data using these summary statistics, and encrypt their genotype and phenotype data using a random key.
+The data broker shares these summary statistics with the data owners. The data owners standardize their data using these summary statistics, and encrypt their genotype and phenotype data using a random key. Any SNPs not in `complete-summary` or have a zero standard deviation are dropped. SNPs with a zero standard deviation have no discriminatory power in the analysis.
 ```
 pyhegp encrypt -s complete-summary genotype.tsv phenotype.tsv
 ```
