@@ -63,11 +63,11 @@ pyhegp --help
 
 ![Simple data sharing workflow](doc/simple-workflow.png)
 
-In this simple scenario, there is only one data owner and they wish to share their encrypted data with a researcher. The data owner encrypts their data with:
+In this simple scenario, there is only one data owner and they wish to share their encrypted data with a researcher. The data owner encrypts their genotype and phenotype data with:
 ```
-pyhegp encrypt genotype.tsv
+pyhegp encrypt genotype.tsv phenotype.tsv
 ```
-They then send the encrypted data `genotype.tsv.hegp` to the researcher. Note that data sharing is carried out-of-band and is outside the scope of `pyhegp`.
+They then send the encrypted `genotype.tsv.hegp` and `phenotype.tsv.hegp` to the researcher. Note that data sharing is carried out-of-band and is outside the scope of `pyhegp`.
 
 ## Joint/federated analysis with many data owners
 
@@ -81,13 +81,14 @@ They share this with the data broker who pools it to compute the summary statist
 ```
 pyhegp pool -o complete-summary summary1 summary2 ...
 ```
-The data broker shares these summary statistics with the data owners. The data owners standardize their data using these summary statistics, and encrypt their data using a random key.
+The data broker shares these summary statistics with the data owners. The data owners standardize their data using these summary statistics, and encrypt their genotype and phenotype data using a random key.
 ```
-pyhegp encrypt -s complete-summary genotype.tsv
+pyhegp encrypt -s complete-summary genotype.tsv phenotype.tsv
 ```
-Finally, the data owners share the encrypted data `genotype.tsv.hegp` with the broker who concatenates it and shares it with all parties.
+Finally, the data owners share the encrypted `genotype.tsv.hegp` and `phenotype.tsv.hegp` with the broker who concatenates it and shares it with all parties.
 ```
 pyhegp cat-genotype -o complete-genotype.tsv.hegp genotype1.tsv.hegp genotype2.tsv.hegp ...
+pyhegp cat-phenotype -o complete-phenotype.tsv.hegp phenotype1.tsv.hegp phenotype2.tsv.hegp ...
 ```
 Note that all data sharing is carried out-of-band and is outside the scope of `pyhegp`.
 
