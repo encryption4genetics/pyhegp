@@ -61,7 +61,7 @@ pyhegp --help
 # How to use
 ## Simple data sharing
 
-![Simple data sharing workflow](doc/simple-workflow.png)
+![Simple data sharing workflow](https://ci.systemreboot.net/archive/pyhegp-readme-images/latest/simple-workflow.png)
 
 In this simple scenario, there is only one data owner and they wish to share their encrypted data with a researcher. The data owner encrypts their genotype and phenotype data with:
 ```
@@ -71,7 +71,7 @@ They then send the encrypted `genotype.tsv.hegp` and `phenotype.tsv.hegp` to the
 
 ## Joint/federated analysis with many data owners
 
-![Joint/federated analysis workflow](doc/joint-workflow.png)
+![Joint/federated analysis workflow](https://ci.systemreboot.net/archive/pyhegp-readme-images/latest/joint-workflow.png)
 
 Data owners generate summary statistics for their data.
 ```
