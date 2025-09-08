@@ -66,83 +66,136 @@
 genome-wide association study} library for R.")
    (license license:gpl3+)))
 
-(define test-profile
-  (profile
-   (content (packages->manifest (list gzip tar pyhegp
-                                      python python-click python-pandas
-                                      r r-dplyr r-genio
-                                      r-mixed-model-gwas r-purrr
-                                      r-qqman r-readr r-stringr
-                                      r-tibble r-tidyr)))))
+(define hsmice-wrangled-gexp
+  (let ((script-profile (profile
+                         (content (packages->manifest
+                                   (list gzip tar r r-dplyr r-genio
+                                         r-purrr r-readr r-tibble r-tidyr))))))
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules (guix build utils))
 
-(define wrangle-script
-  (local-file "../e2e-tests/hsmice/wrangle.r"))
+          (mkdir #$output)
+          (set-path-environment-variable
+           "PATH" '("bin") '(#$script-profile))
+          (set-path-environment-variable
+           "R_LIBS_SITE" '("site-library") '(#$script-profile))
+          (invoke "tar" "-xvf" #$hsmice-data
+                  "./HSmice/1_QTL_data/")
+          (invoke "Rscript"
+                  #$(local-file "../e2e-tests/hsmice/wrangle.r")
+                  "HSmice/1_QTL_data" #$output)))))
 
-(define gwas-script
-  (local-file "../e2e-tests/hsmice/gwas.r"))
+(define hsmice-wrangled
+  (computed-file "hsmice-wrangled" hsmice-wrangled-gexp))
 
-(define check-qtl-script
-  (local-file "../e2e-tests/hsmice/check-qtl.py"))
+(define hsmice-ciphertext-gexp
+  (let ((script-profile (profile
+                          (content (packages->manifest (list pyhegp))))))
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules (guix build utils)
+                       (srfi srfi-26))
 
-(define hsmice-test-gexp
-  (with-imported-modules '((guix build utils))
-    #~(begin
-        (use-modules (guix build utils))
+          (mkdir #$output)
+          (set-path-environment-variable
+           "PATH" '("bin") '(#$script-profile))
+          (for-each (cut install-file <> (getcwd))
+                    (find-files #$hsmice-wrangled "\\.tsv$"))
+          ;; Simple data sharing workflow
+          (invoke "pyhegp" "encrypt" "genotype.tsv" "phenotype.tsv")
+          ;; Joint/federated analysis workflow
+          (invoke "pyhegp" "summary" "genotype1.tsv" "-o" "summary1")
+          (invoke "pyhegp" "summary" "genotype2.tsv" "-o" "summary2")
+          (invoke "pyhegp" "pool" "-o" "complete-summary" "summary1" "summary2")
+          (invoke "pyhegp" "encrypt" "-s" "complete-summary" "genotype1.tsv" "phenotype1.tsv")
+          (invoke "pyhegp" "encrypt" "-s" "complete-summary" "genotype2.tsv" "phenotype2.tsv")
+          (invoke "pyhegp" "cat-genotype" "-o" "complete-genotype.tsv.hegp"
+                  "genotype1.tsv.hegp" "genotype2.tsv.hegp")
+          (invoke "pyhegp" "cat-phenotype" "-o" "complete-phenotype.tsv.hegp"
+                  "phenotype1.tsv.hegp" "phenotype2.tsv.hegp")
+          (for-each (cut install-file <> #$output)
+                    (find-files (getcwd) "\\.tsv.hegp$"))))))
 
-        (mkdir #$output)
-        (set-path-environment-variable
-         "PATH" '("/bin") '(#$test-profile))
-        (set-path-environment-variable
-         "GUIX_PYTHONPATH"
-         '(#$(string-append "/lib/python"
-                            (version-major+minor (package-version python))
-                            "/site-packages"))
-         '(#$test-profile))
-        (set-path-environment-variable
-         "R_LIBS_SITE" '("/site-library") '(#$test-profile))
-        (invoke "tar" "-xvf" #$hsmice-data
-                "./HSmice/1_QTL_data/")
-        (invoke "Rscript" #$wrangle-script "HSmice/1_QTL_data" ".")
+(define hsmice-ciphertext
+  (computed-file "hsmice-ciphertext" hsmice-ciphertext-gexp))
 
-        ;; GWAS on plaintext
-        (invoke "Rscript" #$gwas-script
-                "genotype.tsv" "phenotype.tsv"
-                (string-append #$output "/plaintext-pvalues"))
-        (copy-file "Rplots.pdf" (string-append #$output "/plaintext-manhattan.pdf"))
+(define hsmice-r-mixed-model-gwas-gexp
+  (let ((gwas-script (local-file "../e2e-tests/hsmice/gwas.r"))
+        (script-profile (profile
+                          (content (packages->manifest
+                                    (list r r-dplyr r-mixed-model-gwas
+                                          r-qqman r-readr r-stringr
+                                          r-tibble r-tidyr))))))
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules (guix build utils))
 
-        ;; GWAS with simple ciphertext data sharing
-        (invoke "pyhegp" "encrypt" "genotype.tsv" "phenotype.tsv")
-        (invoke "Rscript" #$gwas-script
-                "genotype.tsv.hegp" "phenotype.tsv.hegp"
-                (string-append #$output "/ciphertext-pvalues"))
-        (copy-file "Rplots.pdf"
-                   (string-append #$output "/ciphertext-manhattan.pdf"))
+          (mkdir #$output)
+          (set-path-environment-variable
+           "PATH" '("bin") '(#$script-profile))
+          (set-path-environment-variable
+           "R_LIBS_SITE" '("site-library") '(#$script-profile))
 
-        ;; Joint federated GWAS
-        (invoke "pyhegp" "summary" "genotype1.tsv" "-o" "summary1")
-        (invoke "pyhegp" "summary" "genotype2.tsv" "-o" "summary2")
-        (invoke "pyhegp" "pool" "-o" "complete-summary" "summary1" "summary2")
-        (invoke "pyhegp" "encrypt" "-s" "complete-summary" "genotype1.tsv" "phenotype1.tsv")
-        (invoke "pyhegp" "encrypt" "-s" "complete-summary" "genotype2.tsv" "phenotype2.tsv")
-        (invoke "pyhegp" "cat-genotype" "-o" "complete-genotype.tsv.hegp"
-                "genotype1.tsv.hegp" "genotype2.tsv.hegp")
-        (invoke "pyhegp" "cat-phenotype" "-o" "complete-phenotype.tsv.hegp"
-                "phenotype1.tsv.hegp" "phenotype2.tsv.hegp")
-        (invoke "Rscript" #$gwas-script
-                "complete-genotype.tsv.hegp" "complete-phenotype.tsv.hegp"
-                (string-append #$output "/federated-ciphertext-pvalues"))
-        (copy-file "Rplots.pdf"
-                   (string-append #$output "/federated-ciphertext-manhattan.pdf"))
+          ;; GWAS on plaintext
+          (invoke "Rscript" #$gwas-script
+                  #$(file-append hsmice-wrangled "/genotype.tsv")
+                  #$(file-append hsmice-wrangled "/phenotype.tsv")
+                  (string-append #$output "/plaintext-pvalues"))
+          (copy-file "Rplots.pdf" (string-append #$output "/plaintext-manhattan.pdf"))
 
-        ;; Check that the QTL is where it should be.
-        (for-each (lambda (pvalues-file)
-                    (invoke "python3" #$check-qtl-script
-                            (string-append #$output "/" pvalues-file)))
-                  (list "plaintext-pvalues"
-                        "ciphertext-pvalues"
-                        "federated-ciphertext-pvalues")))))
+          ;; GWAS with simple ciphertext data sharing
+          (invoke "Rscript" #$gwas-script
+                  #$(file-append hsmice-ciphertext "/genotype.tsv.hegp")
+                  #$(file-append hsmice-ciphertext "/phenotype.tsv.hegp")
+                  (string-append #$output "/ciphertext-pvalues"))
+          (copy-file "Rplots.pdf"
+                     (string-append #$output "/ciphertext-manhattan.pdf"))
+
+          ;; Joint federated GWAS
+          (invoke "Rscript" #$gwas-script
+                  #$(file-append hsmice-ciphertext "/complete-genotype.tsv.hegp")
+                  #$(file-append hsmice-ciphertext "/complete-phenotype.tsv.hegp")
+                  (string-append #$output "/federated-ciphertext-pvalues"))
+          (copy-file "Rplots.pdf"
+                     (string-append #$output "/federated-ciphertext-manhattan.pdf"))))))
+
+(define hsmice-r-mixed-model-gwas
+  (computed-file "hsmice-r-mixed-model-gwas" hsmice-r-mixed-model-gwas-gexp))
+
+(define hsmice-qtl-checked-gexp
+  (let ((script-profile (profile
+                          (content (packages->manifest
+                                    (list python python-pandas))))))
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules (guix build utils)
+                       (srfi srfi-26))
+
+          (mkdir #$output)
+          (set-path-environment-variable
+           "PATH" '("bin") '(#$script-profile))
+          (set-path-environment-variable
+           "GUIX_PYTHONPATH"
+           '(#$(string-append "lib/python"
+                              (version-major+minor (package-version python))
+                              "/site-packages"))
+           '(#$script-profile))
+
+          ;; Check that the QTL is where it should be.
+          (for-each (cut invoke
+                         "python3"
+                         #$(local-file "../e2e-tests/hsmice/check-qtl.py")
+                         <>)
+                    (find-files #$hsmice-r-mixed-model-gwas
+                                "\\-pvalues$"))))))
+
+(define hsmice-qtl-checked
+  (computed-file "hsmice-qtl-checked" hsmice-qtl-checked-gexp))
 
 (define-public hsmice-test
-  (computed-file "hsmice-test" hsmice-test-gexp))
+  (directory-union "hsmice-test"
+                   (list hsmice-r-mixed-model-gwas
+                         hsmice-qtl-checked)))
 
 hsmice-test
