@@ -43,8 +43,19 @@
     (source (local-file ".."
                         "pyhegp-checkout"
                         #:recursive? #t
-                        #:select? (or (git-predicate (dirname (current-source-directory)))
-                                      (const #t))))
+                        #:select? (lambda (file stat)
+                                    ;; If .guix is included, changes
+                                    ;; to other files under .guix—such
+                                    ;; as the hsmice
+                                    ;; test—unnecessarily trigger a
+                                    ;; rebuild of pyhegp. This could
+                                    ;; be a nuisance when hacking on
+                                    ;; the test scripts.
+                                    (and (not (string-contains file "/.guix/"))
+                                         (not (string-contains file "/e2e-tests/"))
+                                         ((or (git-predicate (dirname (current-source-directory)))
+                                              (const #t))
+                                          file stat)))))
     (build-system pyproject-build-system)
     (arguments
      (list #:phases
