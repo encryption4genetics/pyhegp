@@ -18,9 +18,12 @@
 
 (define-module (hsmice-test)
   #:use-module ((gn packages bioinformatics) #:select (r-genio))
+  #:use-module ((gn packages julia) #:select (julia-jwas julia-pipe))
   #:use-module ((gnu packages base) #:select (tar))
   #:use-module ((gnu packages compression) #:select (gzip))
   #:use-module ((gnu packages cran) #:select (r-dplyr r-purrr r-qqman r-stringr))
+  #:use-module ((gnu packages julia) #:select (julia))
+  #:use-module ((gnu packages julia-xyz) #:select (julia-csv julia-dataframes))
   #:use-module ((gnu packages python) #:select (python))
   #:use-module ((gnu packages python-science) #:select (python-pandas))
   #:use-module ((gnu packages python-xyz) #:select (python-click))
@@ -195,9 +198,98 @@ genome-wide association study} library for R.")
 (define hsmice-qtl-checked
   (computed-file "hsmice-qtl-checked" hsmice-qtl-checked-gexp))
 
+(define hsmice-jwas-gwas-gexp
+  (let ((gwas-script (local-file "../e2e-tests/hsmice/jwas-gwas.jl"))
+        (jwas-manhattan-script (local-file "../e2e-tests/hsmice/jwas-manhattan.r"))
+        (script-profile (profile
+                          (content (packages->manifest
+				    (list julia julia-csv julia-dataframes
+					  julia-jwas julia-pipe
+                                          r r-dplyr r-qqman r-readr))))))
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules (guix build utils))
+
+          (mkdir #$output)
+	  (setenv "HOME" "/tmp")
+          (set-path-environment-variable
+           "PATH" '("bin") '(#$script-profile))
+          (set-path-environment-variable
+           "JULIA_LOAD_PATH" '("share/julia/loadpath") '(#$script-profile))
+	  (set-path-environment-variable
+           "JULIA_DEPOT_PATH" '("share/julia") '(#$script-profile))
+          (set-path-environment-variable
+           "R_LIBS_SITE" '("site-library") '(#$script-profile))
+
+          ;; GWAS on plaintext
+          (invoke "julia" #$gwas-script
+                  #$(file-append hsmice-wrangled "/genotype.tsv")
+                  #$(file-append hsmice-wrangled "/phenotype.tsv")
+                  (string-append #$output "/plaintext-jwas-gwas.tsv"))
+          (invoke "Rscript" #$jwas-manhattan-script
+                  (string-append #$output "/plaintext-jwas-gwas.tsv"))
+          (copy-file "Rplots.pdf"
+                     (string-append #$output "/plaintext-jwas-manhattan.pdf"))
+
+          ;; GWAS with simple ciphertext data sharing
+          (invoke "julia" #$gwas-script
+                  #$(file-append hsmice-ciphertext "/genotype.tsv.hegp")
+                  #$(file-append hsmice-ciphertext "/phenotype.tsv.hegp")
+                  (string-append #$output "/ciphertext-jwas-gwas.tsv"))
+          (invoke "Rscript" #$jwas-manhattan-script
+                  (string-append #$output "/ciphertext-jwas-gwas.tsv"))
+          (copy-file "Rplots.pdf"
+                     (string-append #$output "/ciphertext-jwas-manhattan.pdf"))
+
+          ;; Joint federated GWAS
+          (invoke "julia" #$gwas-script
+                  #$(file-append hsmice-ciphertext "/complete-genotype.tsv.hegp")
+                  #$(file-append hsmice-ciphertext "/complete-phenotype.tsv.hegp")
+                  (string-append #$output "/federated-ciphertext-jwas-gwas.tsv"))
+          (invoke "Rscript" #$jwas-manhattan-script
+                  (string-append #$output "/federated-ciphertext-jwas-gwas.tsv"))
+          (copy-file "Rplots.pdf"
+                     (string-append #$output "/federated-ciphertext-jwas-manhattan.pdf"))))))
+
+(define hsmice-jwas-gwas
+  (computed-file "hsmice-jwas-gwas" hsmice-jwas-gwas-gexp))
+
+(define hsmice-jwas-qtl-checked-gexp
+  (let ((script-profile (profile
+                          (content (packages->manifest
+                                    (list python python-pandas))))))
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules (guix build utils)
+                       (srfi srfi-26))
+
+          (mkdir #$output)
+          (set-path-environment-variable
+           "PATH" '("bin") '(#$script-profile))
+          (set-path-environment-variable
+           "GUIX_PYTHONPATH"
+           '(#$(string-append "lib/python"
+                              (version-major+minor (package-version python))
+                              "/site-packages"))
+           '(#$script-profile))
+
+          ;; Check that the QTL is where it should be.
+          (for-each (cut invoke
+                         "python3"
+                         #$(local-file "../e2e-tests/hsmice/check-qtl.py")
+                         <>
+			 "modelfrequency > 0.4")
+                    (find-files #$hsmice-jwas-gwas
+                                "\\-gwas.tsv$"))))))
+
+(define hsmice-jwas-qtl-checked
+  (computed-file "hsmice-jwas-qtl-checked" hsmice-jwas-qtl-checked-gexp))
+
 (define-public hsmice-test
   (directory-union "hsmice-test"
                    (list hsmice-r-mixed-model-gwas
-                         hsmice-qtl-checked)))
+                         hsmice-qtl-checked
+			 hsmice-jwas-gwas
+			 hsmice-jwas-qtl-checked)))
 
 hsmice-test
