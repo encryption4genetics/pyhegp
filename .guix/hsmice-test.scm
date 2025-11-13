@@ -186,7 +186,8 @@ genome-wide association study} library for R.")
           (for-each (cut invoke
                          "python3"
                          #$(local-file "../e2e-tests/hsmice/check-qtl.py")
-                         <>)
+                         <>
+			 "p < 1e-10")
                     (find-files #$hsmice-r-mixed-model-gwas
                                 "\\-pvalues$"))))))
 
