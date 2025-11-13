@@ -18,7 +18,8 @@
 
 (define-module (hsmice-test)
   #:use-module ((gn packages bioinformatics) #:select (r-genio))
-  #:use-module ((gn packages julia) #:select (julia-jwas julia-pipe))
+  #:use-module ((gn packages julia) #:select (julia-pipe))
+  #:use-module ((gn packages julia) #:select (julia-jwas) #:prefix guix:)
   #:use-module ((gnu packages base) #:select (tar))
   #:use-module ((gnu packages compression) #:select (gzip))
   #:use-module ((gnu packages cran) #:select (r-dplyr r-purrr r-qqman r-stringr))
@@ -197,6 +198,15 @@ genome-wide association study} library for R.")
 
 (define hsmice-qtl-checked
   (computed-file "hsmice-qtl-checked" hsmice-qtl-checked-gexp))
+
+;; Our CI system does not have enough memory to run tests for
+;; julia-jwas. So, we disable them.
+(define julia-jwas
+  (package
+    (inherit guix:julia-jwas)
+    (arguments
+     (substitute-keyword-arguments (package-arguments guix:julia-jwas)
+       ((#:tests? tests? #f) #f)))))
 
 (define hsmice-jwas-gwas-gexp
   (let ((gwas-script (local-file "../e2e-tests/hsmice/jwas-gwas.jl"))
