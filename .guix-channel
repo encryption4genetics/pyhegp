@@ -7,8 +7,8 @@
    (url "https://git.genenetwork.org/guix-bioinformatics"))
   ;; Unfortunately, Guix suffers from an open bug whereby channel
   ;; dependencies are not resolved recursively. Hence, we must depend
-  ;; on the guix-past channel explicitly. See
-  ;; https://issues.guix.gnu.org/68797 for details.
+  ;; on the guix-past and guix-rust-past-crates channels explicitly.
+  ;; See https://issues.guix.gnu.org/68797 for details.
   (channel
    (name guix-past)
    (url "https://codeberg.org/guix-science/guix-past")
@@ -17,4 +17,14 @@
      (version 0)
      (commit "0c119db2ea86a389769f4d2b9c6f5c41c027e336")
      (signer
-      "3CE4 6455 8A84 FDC6 9DB4  0CFB 090B 1199 3D9A EBB5"))))))
+      "3CE4 6455 8A84 FDC6 9DB4  0CFB 090B 1199 3D9A EBB5"))))
+  (channel
+   (name guix-rust-past-crates)
+   (url "https://codeberg.org/guix/guix-rust-past-crates.git")
+   (branch "trunk")
+   (introduction
+    (channel-introduction
+     (version 0)
+     (commit "1db24ca92c28255b28076792b93d533eabb3dc6a")
+     (signer
+      "F4C2 D1DF 3FDE EA63 D1D3  0776 ACC6 6D09 CA52 8292"))))))
