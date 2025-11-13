@@ -142,7 +142,8 @@ genome-wide association study} library for R.")
                   #$(file-append hsmice-wrangled "/genotype.tsv")
                   #$(file-append hsmice-wrangled "/phenotype.tsv")
                   (string-append #$output "/plaintext-pvalues"))
-          (copy-file "Rplots.pdf" (string-append #$output "/plaintext-manhattan.pdf"))
+          (copy-file "Rplots.pdf"
+                     (string-append #$output "/plaintext-manhattan.pdf"))
 
           ;; GWAS with simple ciphertext data sharing
           (invoke "Rscript" #$gwas-script
