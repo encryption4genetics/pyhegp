@@ -16,6 +16,7 @@ pyhegp is a Python library and CLI utility implementing homomorphic encryption o
 - [License](#license)
 
 # Install development version
+The development version of pyhegp may be installed either using pip or using Guix.
 ## Using pip
 ### Create a virtual environment (optional)
 In a new directory, create a python virtual environment and activate it.
