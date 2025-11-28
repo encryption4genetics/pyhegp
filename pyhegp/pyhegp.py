@@ -49,14 +49,22 @@ def hegp_encrypt(plaintext, key):
 def hegp_decrypt(ciphertext, key):
     return np.transpose(key) @ ciphertext
 
+def drop_metadata_columns(genotype):
+    return (genotype.drop(columns=["chromosome", "position"])
+            # The reference column is optional. Do not error out if it
+            # does not exist.
+            .drop(columns=["reference"], errors="ignore"))
+
 def genotype_summary(genotype):
-    matrix = genotype.drop(columns=["chromosome", "position", "reference"]).to_numpy()
+    matrix = drop_metadata_columns(genotype).to_numpy()
     return Summary(genotype.shape[0],
                    pd.DataFrame({"chromosome": genotype.chromosome,
-                                 "position": genotype.position,
-                                 "reference": genotype.reference,
-                                 "mean": np.mean(matrix, axis=1),
-                                 "std": np.std(matrix, axis=1)}))
+                                 "position": genotype.position}
+                                | ({"reference": genotype.reference}
+                                   if "reference" in genotype.columns
+                                   else {})
+                                | {"mean": np.mean(matrix, axis=1),
+                                   "std": np.std(matrix, axis=1)}))
 
 def pool_stats(list_of_stats):
     sums = [stats.n*stats.mean for stats in list_of_stats]
@@ -70,13 +78,17 @@ def pool_stats(list_of_stats):
 
 def pool_summaries(summaries):
     def pool_summaries2(summary1, summary2):
+        metadata_columns = (["chromosome", "position"]
+                            + (["reference"]
+                               if "reference" in summary1.data.columns
+                               else []))
         # Drop any SNPs that are not in both summaries.
         data = pd.merge(summary1.data.rename(columns={"mean": "mean1",
                                                       "std": "std1"}),
                         summary2.data.rename(columns={"mean": "mean2",
                                                       "std": "std2"}),
                         how="inner",
-                        on=("chromosome", "position", "reference"))
+                        on=metadata_columns)
         pooled_stats = pool_stats([Stats(summary1.n,
                                          data.mean1.to_numpy(),
                                          data.std2.to_numpy()),
@@ -84,13 +96,16 @@ def pool_summaries(summaries):
                                          data.mean2.to_numpy(),
                                          data.std2.to_numpy())])
         return Summary(pooled_stats.n,
-                       pd.concat((data[["chromosome", "position", "reference"]],
+                       pd.concat((data[metadata_columns],
                                   pd.DataFrame({"mean": pooled_stats.mean,
                                                 "std": pooled_stats.std})),
                                  axis="columns"))
     pooled_summary = reduce(pool_summaries2, summaries)
     return Summary(pooled_summary.n,
-                   pooled_summary.data.drop(columns=["reference"]))
+                   # The reference column is optional. Do not raise an
+                   # error if it is absent.
+                   pooled_summary.data.drop(columns=["reference"],
+                                            errors="ignore"))
 
 def encrypt_genotype(genotype, key, summary):
     # Drop SNPs that have a zero standard deviation. Such SNPs have no
@@ -102,8 +117,7 @@ def encrypt_genotype(genotype, key, summary):
     common_genotype = pd.merge(genotype,
                                summary.data[["chromosome", "position"]],
                                on=("chromosome", "position"))
-    sample_names = (common_genotype.drop(
-        columns=["chromosome", "position", "reference"]).columns)
+    sample_names = drop_metadata_columns(common_genotype).columns
     genotype_matrix = common_genotype[sample_names].to_numpy().T
     encrypted_genotype_matrix = hegp_encrypt(standardize(
         genotype_matrix,
@@ -202,9 +216,7 @@ def encrypt_command(genotype_file, phenotype_file, summary_file, key_file, force
     else:
         summary = genotype_summary(genotype)
     key = random_key(np.random.default_rng(),
-                     len(genotype
-                         .drop(columns=["chromosome", "position", "reference"])
-                         .columns))
+                     len(drop_metadata_columns(genotype).columns))
     if key_file:
         write_key(key_file, key)
 
