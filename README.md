@@ -11,6 +11,7 @@ pyhegp is a Python library and CLI utility implementing homomorphic encryption o
 - [How to use](#how-to-use)
   - [Simple data sharing](#simple-data-sharing)
   - [Joint/federated analysis with many data owners](#jointfederated-analysis-with-many-data-owners)
+- [Frequently asked questions (FAQ)](#frequently-asked-questions-faq)
 - [File formats](#file-formats)
 - [Run tests](#run-tests)
 - [License](#license)
@@ -92,6 +93,11 @@ pyhegp cat-genotype -o complete-genotype.tsv.hegp genotype1.tsv.hegp genotype2.t
 pyhegp cat-phenotype -o complete-phenotype.tsv.hegp phenotype1.tsv.hegp phenotype2.tsv.hegp ...
 ```
 Note that all data sharing is carried out-of-band and is outside the scope of `pyhegp`.
+
+# Frequently asked questions (FAQ)
+## Does pyhegp standardize the data?
+
+For each SNP, `pyhegp` standardizes the genotype (so the mean is zero and the standard deviation is one) during encryption. `pyhegp` does NOT standardize the phenotype.
 
 # File formats
 
