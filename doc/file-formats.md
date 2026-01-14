@@ -49,7 +49,11 @@ chr11	3464016	A	-0.3461	-0.334	-0.3331	0.08
 
 ## phenotype (and covariates) file
 
-The phenotype file is a tab-separated values (TSV) file. The first line MUST be a header with column labels. Each row corresponds to one individual. The column labelled `sample-id` contains the sample identifier for that individual. Other columns each contain a phenotypical trait for that individual. The headers of these columns MUST be the names of the phenotypes. Column headers are case-sensitive.
+The phenotype file is a tab-separated values (TSV) file. The first line MUST be a header with column labels. Each row corresponds to one individual.
+
+The column labelled `sample-id` contains the sample identifier for that individual. Other columns each contain a phenotypical trait for that individual. The headers of these columns MUST be the names of the phenotypes. Column headers are case-sensitive.
+
+Encryption MAY add a column labelled `intercept` containing the ciphertext corresponding to a vector of 1s.
 
 Here is an example phenotype file.
 ```

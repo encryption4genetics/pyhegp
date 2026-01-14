@@ -1,5 +1,5 @@
 ### pyhegp --- Homomorphic encryption of genotypes and phenotypes
-### Copyright © 2025 Arun Isaac <arunisaac@systemreboot.net>
+### Copyright © 2025–2026 Arun Isaac <arunisaac@systemreboot.net>
 ###
 ### This file is part of pyhegp.
 ###
@@ -104,13 +104,21 @@ phenotype_names = st.lists(tabless_printable_ascii_text
 @st.composite
 def phenotype_frames(draw,
                      number_of_samples=st.integers(min_value=0,
-                                                   max_value=10)):
+                                                   max_value=10),
+                     intercept_present=st.booleans()):
     _number_of_samples = draw(number_of_samples)
     return draw(data_frames(
         columns=([column(name="sample-id",
                          dtype="str",
                          elements=tabless_printable_ascii_text,
                          unique=True)]
+                 + ([column(name="intercept",
+                            dtype="float64",
+                            elements=st.floats(min_value=-1,
+                                               max_value=1,
+                                               allow_nan=False))]
+                    if draw(intercept_present)
+                    else [])
                  + columns(draw(phenotype_names),
                            dtype="float64",
                            elements=st.floats(min_value=-1000,

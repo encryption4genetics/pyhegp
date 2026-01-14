@@ -131,11 +131,14 @@ def encrypt_genotype(genotype, key, summary):
 
 def encrypt_phenotype(phenotype, key):
     phenotype_matrix = phenotype.drop(columns=["sample-id"])
-    sample_names = phenotype_matrix.columns
+    sample_names = list(phenotype_matrix.columns)
     return pd.concat((phenotype["sample-id"],
-                      pd.DataFrame(hegp_encrypt(phenotype_matrix.to_numpy(),
-                                                key),
-                                   columns=sample_names)),
+                      pd.DataFrame(
+                          hegp_encrypt(
+                              np.column_stack((np.ones(len(phenotype)),
+                                               phenotype_matrix.to_numpy())),
+                              key),
+                          columns=["intercept"] + sample_names)),
                      axis="columns")
 
 def cat_genotype(genotypes):
