@@ -1,4 +1,7 @@
 # File formats
+
+The capitalized terms MUST, MUST NOT, SHOULD, SHOULD NOT and MAY in this document are as defined in [RFC2119](https://www.ietf.org/rfc/rfc2119.txt).
+
 ## summary file
 
 The summary file is ASCII encoded. It consists of two sections—the header and the data. Lines MUST be terminated in the Unix style with a new line (aka line feed) character. Lines in the header section MUST be prefixed with `#`.
