@@ -164,6 +164,7 @@ def cat_phenotype(phenotypes):
             return pd.concat(phenotypes)
 
 @click.group()
+@click.version_option()
 def main():
     pass
 
