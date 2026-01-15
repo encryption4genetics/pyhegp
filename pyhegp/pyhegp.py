@@ -33,15 +33,19 @@ Stats = namedtuple("Stats", "n mean std")
 def random_key(rng, n):
     return special_ortho_group.rvs(n, random_state=rng)
 
-def standardize(matrix, mean, standard_deviation):
+def center(matrix, mean):
     m, _ = matrix.shape
-    return ((matrix - np.tile(mean, (m, 1)))
-            @ np.diag(1 / standard_deviation))
+    return matrix - np.tile(mean, (m, 1))
+
+def uncenter(matrix, mean):
+    return center(matrix, -mean)
+
+def standardize(matrix, mean, standard_deviation):
+    return center(matrix, mean) @ np.diag(1 / standard_deviation)
 
 def unstandardize(matrix, mean, standard_deviation):
-    m, _ = matrix.shape
-    return ((matrix @ np.diag(standard_deviation))
-            + np.tile(mean, (m, 1)))
+    return uncenter(matrix @ np.diag(standard_deviation),
+                    mean)
 
 def hegp_encrypt(plaintext, key):
     return key @ plaintext

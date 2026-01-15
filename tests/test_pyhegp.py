@@ -1,5 +1,5 @@
 ### pyhegp --- Homomorphic encryption of genotypes and phenotypes
-### Copyright © 2025 Arun Isaac <arunisaac@systemreboot.net>
+### Copyright © 2025–2026 Arun Isaac <arunisaac@systemreboot.net>
 ###
 ### This file is part of pyhegp.
 ###
@@ -29,7 +29,7 @@ import pandas as pd
 import pytest
 from pytest import approx
 
-from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, standardize, unstandardize, genotype_summary, encrypt_genotype, encrypt_phenotype, cat_genotype, cat_phenotype
+from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, center, uncenter, standardize, unstandardize, genotype_summary, encrypt_genotype, encrypt_phenotype, cat_genotype, cat_phenotype
 from pyhegp.serialization import Summary, read_summary, read_genotype, is_genotype_metadata_column, is_phenotype_metadata_column
 from pyhegp.utils import negate
 
@@ -92,6 +92,13 @@ def test_hegp_encryption_decryption_are_inverses(plaintext):
     rng = np.random.default_rng()
     key = random_key(rng, len(plaintext))
     assert hegp_decrypt(hegp_encrypt(plaintext, key), key) == approx(plaintext)
+
+@given(arrays("float64",
+              array_shapes(min_dims=2, max_dims=2),
+              elements=st.floats(min_value=0, max_value=100)))
+def test_center_uncenter_are_inverses(matrix):
+    mean = np.mean(matrix, axis=0)
+    assert uncenter(center(matrix, mean), mean) == approx(matrix)
 
 @given(arrays("float64",
               array_shapes(min_dims=2, max_dims=2),
