@@ -111,7 +111,7 @@ def pool_summaries(summaries):
                    pooled_summary.data.drop(columns=["reference"],
                                             errors="ignore"))
 
-def encrypt_genotype(genotype, key, summary):
+def encrypt_genotype(genotype, key, summary, only_center):
     # Drop SNPs that have a zero standard deviation. Such SNPs have no
     # discriminatory power in the analysis and mess with our
     # standardization by causing a division by zero.
@@ -123,11 +123,13 @@ def encrypt_genotype(genotype, key, summary):
                                on=("chromosome", "position"))
     sample_names = drop_metadata_columns(common_genotype).columns
     genotype_matrix = common_genotype[sample_names].to_numpy().T
-    encrypted_genotype_matrix = hegp_encrypt(standardize(
-        genotype_matrix,
-        summary.data["mean"].to_numpy(),
-        summary.data["std"].to_numpy()),
-                                             key)
+    encrypted_genotype_matrix = hegp_encrypt(
+        center(genotype_matrix, summary.data["mean"].to_numpy())
+        if only_center
+        else standardize(genotype_matrix,
+                         summary.data["mean"].to_numpy(),
+                         summary.data["std"].to_numpy()),
+        key)
     return pd.concat((common_genotype[["chromosome", "position"]],
                       pd.DataFrame(encrypted_genotype_matrix.T,
                                    columns=sample_names)),
@@ -209,10 +211,14 @@ def pool_command(pooled_summary_file, summary_files):
               help="Input key")
 @click.option("--key-out", "-k", "key_output_file", type=click.File("w"),
               help="Output key")
+@click.option("--only-center", is_flag=True,
+              help=("Do not divide genotype dosages by standard deviation;"
+                    " only center by subtracting mean"))
 @click.option("--force", "-f", is_flag=True,
               help="Overwrite output files even if they exist")
 def encrypt_command(genotype_file, phenotype_file, summary_file,
-                    key_input_file, key_output_file, force):
+                    key_input_file, key_output_file,
+                    only_center, force):
     def write_ciphertext(plaintext_path, writer):
         ciphertext_path = Path(plaintext_path + ".hegp")
         if ciphertext_path.exists() and not force:
@@ -234,7 +240,8 @@ def encrypt_command(genotype_file, phenotype_file, summary_file,
     if key_output_file:
         write_key(key_output_file, key)
 
-    encrypted_genotype = encrypt_genotype(genotype, key, summary)
+    encrypted_genotype = encrypt_genotype(genotype, key, summary,
+                                          only_center)
     if len(encrypted_genotype) < len(genotype):
         dropped_snps = len(genotype) - len(encrypted_genotype)
         print(f"Dropped {dropped_snps} SNP(s)")
