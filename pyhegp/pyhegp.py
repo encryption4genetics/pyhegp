@@ -18,6 +18,7 @@
 
 from collections import namedtuple
 from functools import reduce
+import math
 from pathlib import Path
 import sys
 
@@ -217,6 +218,10 @@ def pool_command(pooled_summary_file, summary_files):
 @click.argument("phenotype-file", type=click.File("r"), required=False)
 @click.option("--summary", "-s", "summary_file", type=click.File("rb"),
               help="Summary statistics file")
+@click.option("--key-blocks", "-b", "key_blocks",
+              type=click.INT,
+              help=("Number of blocks to use in the block diagonal key matrix"
+                    "  [default: ceil(number_of_samples/1500)]"))
 @click.option("--key-in", "key_input_file", type=click.File("rb"),
               help="Input key")
 @click.option("--key-out", "-k", "key_output_file", type=click.File("w"),
@@ -227,7 +232,7 @@ def pool_command(pooled_summary_file, summary_files):
 @click.option("--force", "-f", is_flag=True,
               help="Overwrite output files even if they exist")
 def encrypt_command(genotype_file, phenotype_file, summary_file,
-                    key_input_file, key_output_file,
+                    key_blocks, key_input_file, key_output_file,
                     only_center, force):
     def write_ciphertext(plaintext_path, writer):
         ciphertext_path = Path(plaintext_path + ".hegp")
@@ -245,8 +250,15 @@ def encrypt_command(genotype_file, phenotype_file, summary_file,
     if key_input_file:
         key = read_key(key_input_file)
     else:
+        number_of_samples = len(drop_metadata_columns(genotype).columns)
+        # We aim for this block size. But, to maximize the strength of
+        # the encryption, we must be careful to ensure that all blocks
+        # are of a similar size. If one block is too small, that block
+        # could be cracked easily.
+        target_block_size = 1500
         key = random_key(np.random.default_rng(),
-                         len(drop_metadata_columns(genotype).columns))
+                         number_of_samples,
+                         key_blocks or math.ceil(number_of_samples/target_block_size))
     if key_output_file:
         write_key(key_output_file, key)
 
