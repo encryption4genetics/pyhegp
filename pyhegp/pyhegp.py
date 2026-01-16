@@ -26,12 +26,22 @@ import numpy as np
 import pandas as pd
 from scipy.stats import special_ortho_group
 
+from pyhegp.linalg import BlockDiagonalMatrix
 from pyhegp.serialization import Summary, read_summary, write_summary, read_genotype, read_phenotype, write_genotype, write_phenotype, read_key, write_key, is_genotype_metadata_column
 
 Stats = namedtuple("Stats", "n mean std")
 
-def random_key(rng, n):
-    return special_ortho_group.rvs(n, random_state=rng)
+def random_key(rng, size, number_of_blocks=1):
+    def random_key_block(n):
+        return special_ortho_group.rvs(n, random_state=rng)
+
+    block_size = size // number_of_blocks
+    # A rotation matrix must be at least 2×2.
+    assert block_size >= 2
+    return BlockDiagonalMatrix(
+        [random_key_block(block_size)
+         for i in range(number_of_blocks - 1)]
+        + [random_key_block(size - block_size*(number_of_blocks - 1))])
 
 def center(matrix, mean):
     m, _ = matrix.shape
