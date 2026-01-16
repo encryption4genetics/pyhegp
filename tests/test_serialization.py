@@ -19,7 +19,6 @@
 import tempfile
 
 from hypothesis import given, strategies as st
-from hypothesis.extra.numpy import arrays, array_shapes
 import pandas as pd
 from pytest import approx
 
