@@ -218,7 +218,7 @@ def pool_command(pooled_summary_file, summary_files):
 @click.argument("phenotype-file", type=click.File("r"), required=False)
 @click.option("--summary", "-s", "summary_file", type=click.File("rb"),
               help="Summary statistics file")
-@click.option("--key-blocks", "-b", "key_blocks",
+@click.option("--key-blocks", "-b",
               type=click.INT,
               help=("Number of blocks to use in the block diagonal key matrix"
                     "  [default: ceil(number_of_samples/1500)]"))
