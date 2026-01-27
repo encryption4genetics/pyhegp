@@ -1,5 +1,5 @@
 ### pyhegp --- Homomorphic encryption of genotypes and phenotypes
-### Copyright © 2025 Arun Isaac <arunisaac@systemreboot.net>
+### Copyright © 2025–2026 Arun Isaac <arunisaac@systemreboot.net>
 ###
 ### This file is part of pyhegp.
 ###
@@ -96,7 +96,7 @@ def read_genotype(file):
     return df
 
 def is_phenotype_metadata_column(name):
-    return name.lower() == "sample-id"
+    return name.lower() in ["sample-id", "intercept"]
 
 def read_phenotype(file):
     df = read_tsv(file, {"sample-id": "str"})
