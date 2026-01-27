@@ -210,7 +210,7 @@ def pool_command(pooled_summary_file, summary_files):
     max_snps = max(len(summary.data) for summary in summaries)
     if len(pooled_summary.data) < max_snps:
         dropped_snps = max_snps - len(pooled_summary.data)
-        print(f"Dropped {dropped_snps} SNP(s)")
+        print(f"Dropped {dropped_snps} SNP(s) that were not present in all datasets")
     write_summary(pooled_summary_file, pooled_summary)
 
 @main.command("encrypt")
@@ -266,20 +266,21 @@ def encrypt_command(genotype_file, phenotype_file, summary_file,
     # discriminatory power in the analysis and mess with our
     # standardization by causing a division by zero.
     summary_subset = drop_zero_stddev_snps(summary)
+    if (dropped_zero_stddev_snps := len(summary.data) - len(summary_subset.data)) > 0:
+        print(f"Dropped {dropped_zero_stddev_snps} SNP(s) with zero standard deviation")
 
     # Drop any SNPs that are not in both genotype and summary. Some
     # SNPs may have been dropped from the summary because they had a
     # zero standard deviation. Others may have been dropped because
     # they were not present in all datasets.
     common_genotype = drop_uncommon_snps(genotype, summary_subset)
+    if (dropped_uncommon_snps := len(genotype) - len(common_genotype) - dropped_zero_stddev_snps) > 0:
+        print(f"Dropped {dropped_uncommon_snps} SNP(s) that were not present in all datasets")
 
     encrypted_genotype = encrypt_genotype(common_genotype,
                                           key,
                                           summary_subset,
                                           only_center)
-    if len(encrypted_genotype) < len(genotype):
-        dropped_snps = len(genotype) - len(encrypted_genotype)
-        print(f"Dropped {dropped_snps} SNP(s)")
     write_ciphertext(genotype_file.name,
                      lambda file: write_genotype(file, encrypted_genotype))
 
