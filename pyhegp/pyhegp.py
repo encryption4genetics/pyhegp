@@ -122,18 +122,18 @@ def pool_summaries(summaries):
                    pooled_summary.data.drop(columns=["reference"],
                                             errors="ignore"))
 
-def encrypt_genotype(genotype, key, summary, only_center):
-    # Drop SNPs that have a zero standard deviation. Such SNPs have no
-    # discriminatory power in the analysis and mess with our
-    # standardization by causing a division by zero.
-    summary = summary._replace(
+def drop_zero_stddev_snps(summary):
+    return summary._replace(
         data=summary.data[~np.isclose(summary.data["std"], 0)])
-    # Drop any SNPs that are not in both genotype and summary.
-    common_genotype = pd.merge(genotype,
-                               summary.data[["chromosome", "position"]],
-                               on=("chromosome", "position"))
-    sample_names = drop_metadata_columns(common_genotype).columns
-    genotype_matrix = common_genotype[sample_names].to_numpy().T
+
+def drop_uncommon_snps(genotype, summary):
+    return pd.merge(genotype,
+                    summary.data[["chromosome", "position"]],
+                    on=("chromosome", "position"))
+
+def encrypt_genotype(genotype, key, summary, only_center):
+    sample_names = drop_metadata_columns(genotype).columns
+    genotype_matrix = genotype[sample_names].to_numpy().T
     encrypted_genotype_matrix = hegp_encrypt(
         center(genotype_matrix, summary.data["mean"].to_numpy())
         if only_center
@@ -141,7 +141,7 @@ def encrypt_genotype(genotype, key, summary, only_center):
                          summary.data["mean"].to_numpy(),
                          summary.data["std"].to_numpy()),
         key)
-    return pd.concat((common_genotype[["chromosome", "position"]],
+    return pd.concat((genotype[["chromosome", "position"]],
                       pd.DataFrame(encrypted_genotype_matrix.T,
                                    columns=sample_names)),
                      axis="columns")
@@ -262,7 +262,20 @@ def encrypt_command(genotype_file, phenotype_file, summary_file,
     if key_output_file:
         write_key(key_output_file, key)
 
-    encrypted_genotype = encrypt_genotype(genotype, key, summary,
+    # Drop SNPs that have a zero standard deviation. Such SNPs have no
+    # discriminatory power in the analysis and mess with our
+    # standardization by causing a division by zero.
+    summary_subset = drop_zero_stddev_snps(summary)
+
+    # Drop any SNPs that are not in both genotype and summary. Some
+    # SNPs may have been dropped from the summary because they had a
+    # zero standard deviation. Others may have been dropped because
+    # they were not present in all datasets.
+    common_genotype = drop_uncommon_snps(genotype, summary_subset)
+
+    encrypted_genotype = encrypt_genotype(common_genotype,
+                                          key,
+                                          summary_subset,
                                           only_center)
     if len(encrypted_genotype) < len(genotype):
         dropped_snps = len(genotype) - len(encrypted_genotype)

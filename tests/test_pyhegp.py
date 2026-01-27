@@ -29,7 +29,7 @@ import pandas as pd
 import pytest
 from pytest import approx
 
-from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, center, uncenter, standardize, unstandardize, genotype_summary, encrypt_genotype, encrypt_phenotype, cat_genotype, cat_phenotype
+from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, center, uncenter, standardize, unstandardize, genotype_summary, drop_zero_stddev_snps, drop_uncommon_snps, encrypt_genotype, encrypt_phenotype, cat_genotype, cat_phenotype
 from pyhegp.serialization import Summary, read_summary, read_genotype, is_genotype_metadata_column, is_phenotype_metadata_column
 from pyhegp.utils import negate
 
@@ -166,10 +166,10 @@ def test_conservation_of_solutions(genotype_phenotype_and_number_of_key_blocks):
                       key="number-of-samples")),
        st.booleans())
 def test_encrypt_genotype_does_not_produce_na(genotype, key, only_center):
-    assert not encrypt_genotype(genotype,
-                                key,
-                                genotype_summary(genotype),
-                                only_center).isna().any(axis=None)
+    summary = drop_zero_stddev_snps(genotype_summary(genotype))
+    common_genotype = drop_uncommon_snps(genotype, summary)
+    assert not (encrypt_genotype(common_genotype, key, summary, only_center)
+                .isna().any(axis=None))
 
 @given(phenotype_frames(st.shared(st.integers(min_value=2, max_value=10),
                                   key="number-of-samples")),
