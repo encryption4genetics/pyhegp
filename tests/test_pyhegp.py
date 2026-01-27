@@ -30,7 +30,7 @@ import pytest
 from pytest import approx
 
 from pyhegp.pyhegp import Stats, main, hegp_encrypt, hegp_decrypt, random_key, pool_stats, center, uncenter, standardize, unstandardize, genotype_summary, drop_zero_stddev_snps, drop_uncommon_snps, encrypt_genotype, encrypt_phenotype, cat_genotype, cat_phenotype
-from pyhegp.serialization import Summary, read_summary, read_genotype, is_genotype_metadata_column, is_phenotype_metadata_column
+from pyhegp.serialization import Summary, read_summary, read_genotype, is_genotype_metadata_column
 from pyhegp.utils import negate
 
 from helpers.strategies import genotype_frames, phenotype_frames, keys
