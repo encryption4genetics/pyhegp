@@ -178,6 +178,19 @@ def test_encrypt_genotype_does_not_produce_na(genotype, key, only_center):
 def test_encrypt_phenotype_does_not_produce_na(phenotype, key):
     assert not encrypt_phenotype(phenotype, key).isna().any(axis=None)
 
+def test_encrypt_with_only_center_does_not_drop_snps(tmp_path):
+    genotype_file = Path("test-data/genotype-with-zero-stddev-snp.tsv")
+    shutil.copy(genotype_file, tmp_path)
+    result = CliRunner().invoke(main, ["encrypt",
+                                       "--only-center",
+                                       str(tmp_path / genotype_file.name)])
+    assert result.exit_code == 0
+    with genotype_file.open("rb") as file:
+        genotype = read_genotype(file)
+    with (tmp_path / f"{genotype_file.name}.hegp").open("rb") as file:
+        encrypted_genotype = read_genotype(file)
+    assert len(genotype) == len(encrypted_genotype)
+
 @pytest.mark.parametrize("summary_files",
                          [[Path("test-data/pool-test-summary1"),
                            Path("test-data/pool-test-summary2")],

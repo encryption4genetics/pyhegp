@@ -262,10 +262,11 @@ def encrypt_command(genotype_file, phenotype_file, summary_file,
     if key_output_file:
         write_key(key_output_file, key)
 
-    # Drop SNPs that have a zero standard deviation. Such SNPs have no
-    # discriminatory power in the analysis and mess with our
-    # standardization by causing a division by zero.
-    summary_subset = drop_zero_stddev_snps(summary)
+    # Drop SNPs that have a zero standard deviation. Such SNPs
+    # have no discriminatory power in the analysis and mess with
+    # our standardization by causing a division by zero. This is
+    # not a problem if we are only centering.
+    summary_subset = summary if only_center else drop_zero_stddev_snps(summary)
     if (dropped_zero_stddev_snps := len(summary.data) - len(summary_subset.data)) > 0:
         print(f"Dropped {dropped_zero_stddev_snps} SNP(s) with zero standard deviation")
 
