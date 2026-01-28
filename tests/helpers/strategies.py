@@ -45,9 +45,7 @@ sample_names = (tabless_printable_ascii_text
                 .filter(negate(is_genotype_metadata_column)))
 
 def genotype_metadata(draw, number_of_snps, reference_present):
-    match list(zip(*draw(st.lists(st.tuples(chromosomes, positions, references)
-                                  if reference_present
-                                  else st.tuples(chromosomes, positions),
+    match list(zip(*draw(st.lists(st.tuples(chromosomes, positions),
                                   min_size=number_of_snps,
                                   max_size=number_of_snps,
                                   unique=True)))):
@@ -56,10 +54,13 @@ def genotype_metadata(draw, number_of_snps, reference_present):
                                  "position": pd.Series(dtype="int")}
                                 | ({"reference": pd.Series(dtype="str")}
                                    if reference_present else {}))
-        case chromosomes_lst, positions_lst, *references_lst:
+        case chromosomes_lst, positions_lst:
             return pd.DataFrame({"chromosome": pd.Series(chromosomes_lst, dtype="str"),
                                  "position": pd.Series(positions_lst, dtype="int")}
-                                | ({"reference": pd.Series(*references_lst, dtype="str")}
+                                | ({"reference": pd.Series(draw(st.lists(references,
+                                                                         min_size=number_of_snps,
+                                                                         max_size=number_of_snps)),
+                                                           dtype="str")}
                                    if reference_present else {}))
         case _ as unreachable:
             assert_never(unreachable)
