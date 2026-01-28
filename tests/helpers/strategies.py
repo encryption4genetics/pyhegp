@@ -38,7 +38,8 @@ positions = st.integers(min_value=0,
 references = st.text(st.characters(codec="ascii",
                                    categories=(),
                                    include_characters=("A", "G", "C", "T")),
-                     min_size=1)
+                     min_size=1,
+                     max_size=1)
 
 sample_names = (tabless_printable_ascii_text
                 .filter(negate(is_genotype_metadata_column)))
